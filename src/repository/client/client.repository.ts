@@ -57,14 +57,18 @@ export class ClientRepository
       findById(id: string): Promise<Client> {
             return this.repository.client.findUnique({
                   where: { id },
+
                   include: {
                         address: true,
                         loan: {
                               include: {
                                     payment: {
                                           include: {
-                                                iterestDelay: true
-                                          }
+                                                iterestDelay: true,
+                                          },
+                                          orderBy: {
+                                                dueDate: 'asc',
+                                          },
                                     },
                               },
                         },
