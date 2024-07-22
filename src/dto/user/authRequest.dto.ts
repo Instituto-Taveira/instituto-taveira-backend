@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import { User } from '../../entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
