@@ -23,7 +23,7 @@ export class ClientService {
             private readonly clientRepository: IClientRepository,
             @Inject(forwardRef(() => LoanService))
             private readonly loanService: LoanService,
-      ) { }
+      ) {}
 
       async create(props: CreateClientDto): Promise<Client> {
             const address = new Address(props.address);
@@ -62,7 +62,7 @@ export class ClientService {
                         HttpStatus.NOT_FOUND,
                   );
             }
-
+            console.log(clients.items);
             const items = this.toDTO(clients.items);
 
             items.map((client) => {
@@ -125,7 +125,6 @@ export class ClientService {
                         HttpStatus.NOT_FOUND,
                   );
             }
-
             const items = this.toDTO(clients.items);
 
             items.map((client) => {
@@ -152,31 +151,43 @@ export class ClientService {
                         HttpStatus.NOT_FOUND,
                   );
 
-                  client.loan.forEach(loan => {
-                        let totalMoraSum = 0;
-                
-                        loan.payment.forEach(payment => {
-                            if (payment.iterestDelay && payment.iterestDelay.payDay && payment.dueDate) {
-                                const payDay = new Date(payment.iterestDelay.payDay);
-                                const dueDate = new Date(payment.dueDate);
-                
-                                const timeDiff = Math.abs(payDay.getTime() - dueDate.getTime());
-                                const differenceInDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                
-                                const result = differenceInDays * payment.iterestDelay.value;
-                                payment.iterestDelay.days = differenceInDays;
-                                payment.iterestDelay.totalMora = result;
-                
-                                // Acumular o total de mora
-                                if(payment.iterestDelay.settled === false){
-                                      totalMoraSum += result;
-                                }
-                            }
-                        });
-                
-                        // Adicionar totalMoraSum ao mesmo nível de cada objeto payment
-                        loan.totalMoraSum = totalMoraSum;
-                    });
+            client.loan.forEach((loan) => {
+                  let totalMoraSum = 0;
+
+                  loan.payment.forEach((payment) => {
+                        if (
+                              payment.iterestDelay &&
+                              payment.iterestDelay.payDay &&
+                              payment.dueDate
+                        ) {
+                              const payDay = new Date(
+                                    payment.iterestDelay.payDay,
+                              );
+                              const dueDate = new Date(payment.dueDate);
+
+                              const timeDiff = Math.abs(
+                                    payDay.getTime() - dueDate.getTime(),
+                              );
+                              const differenceInDays = Math.ceil(
+                                    timeDiff / (1000 * 3600 * 24),
+                              );
+
+                              const result =
+                                    differenceInDays *
+                                    payment.iterestDelay.value;
+                              payment.iterestDelay.days = differenceInDays;
+                              payment.iterestDelay.totalMora = result;
+
+                              // Acumular o total de mora
+                              if (payment.iterestDelay.settled === false) {
+                                    totalMoraSum += result;
+                              }
+                        }
+                  });
+
+                  // Adicionar totalMoraSum ao mesmo nível de cada objeto payment
+                  loan.totalMoraSum = totalMoraSum;
+            });
 
             return client;
       }
@@ -198,6 +209,7 @@ export class ClientService {
 
       private toDTO(clients: Client[]): MappedClientDTO[] {
             return clients.map((client) => {
+                  let loanOpen = false;
                   let total = 0;
                   let pagar = 0;
 
@@ -206,6 +218,11 @@ export class ClientService {
                   });
 
                   client.loan.forEach((item) => {
+                        console.log(item.payment_settled);
+                        if (item.payment_settled === false) {
+                              console.log('entrou');
+                              loanOpen = true;
+                        }
                         pagar = (total * item.interest_rate) / 100 + total;
                   });
 
@@ -214,6 +231,7 @@ export class ClientService {
                         name: client.name,
                         fone: client.fone,
                         address: client.address,
+                        loanOpen,
                         loan: client.loan,
                         total,
                         pagar,

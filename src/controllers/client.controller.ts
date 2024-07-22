@@ -25,11 +25,10 @@ import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
 @Controller('api/client')
 export class ClientController {
       constructor(private readonly clientService: ClientService) {}
-      
+
       @ApiOperation({
             summary: 'Criar Cliente',
-            description:
-            'Utilize este endpoint para criar um novo cliente.',
+            description: 'Utilize este endpoint para criar um novo cliente.',
       })
       @Post()
       create(@Body() createClientDto: CreateClientDto) {
@@ -39,7 +38,7 @@ export class ClientController {
       @ApiOperation({
             summary: 'Listar Clientes com pagamentos pendentes',
             description:
-                'Utilize este endpoint para listar todos os clientes com pagamentos pendentes.',
+                  'Utilize este endpoint para listar todos os clientes com pagamentos pendentes.',
       })
       @Get('/notPayment')
       listAllFalse(
@@ -51,22 +50,21 @@ export class ClientController {
 
       @ApiOperation({
             summary: 'Listar Clientes',
-            description:
-                'Utilize este endpoint para listar todos os clientes.',
-        })
+            description: 'Utilize este endpoint para listar todos os clientes.',
+      })
       @Get('')
-      listAll(
+      async listAll(
             @Query() page: Page,
             @Query() filters: FiltersClientDTO,
       ): Promise<PageResponse<MappedClientDTO>> {
-            return this.clientService.listAll(page, filters);
+            return await this.clientService.listAll(page, filters);
       }
 
       @ApiOperation({
             summary: 'Listar Clientes com pagamentos confirmados',
             description:
-                'Utilize este endpoint para listar todos os clientes com pagamentos confirmados.',
-        })
+                  'Utilize este endpoint para listar todos os clientes com pagamentos confirmados.',
+      })
       @Get('/paymentConfirmed')
       listAllTrue(
             @Query() page: Page,
@@ -77,9 +75,8 @@ export class ClientController {
 
       @ApiOperation({
             summary: 'Buscar Cliente',
-            description:
-                'Utilize este endpoint para buscar um cliente por ID.',
-        })
+            description: 'Utilize este endpoint para buscar um cliente por ID.',
+      })
       @Get(':id')
       async listById(@Param('id') id: string) {
             return await this.clientService.listById(id);
@@ -87,9 +84,8 @@ export class ClientController {
 
       @ApiOperation({
             summary: 'Atualizar Cliente',
-            description:
-                'Utilize este endpoint para atualizar um cliente.',
-        })
+            description: 'Utilize este endpoint para atualizar um cliente.',
+      })
       @Put(':id')
       update(
             @Param('id') id: string,
@@ -100,9 +96,8 @@ export class ClientController {
 
       @ApiOperation({
             summary: 'Deletar Cliente',
-            description:
-                'Utilize este endpoint para deletar um cliente.',
-        })
+            description: 'Utilize este endpoint para deletar um cliente.',
+      })
       @Delete(':id')
       remove(@Param('id') id: string) {
             return this.clientService.delete(id);
