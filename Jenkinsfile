@@ -33,7 +33,7 @@ pipeline {
                     def imageName = "financial/financial-api:${env.BUILD_ID}"
                     def containerName = 'financial-api'
 
-                    sh "docker run -d --name ${containerName} -p 3333:3333 ${imageName}"
+                    sh "docker run -d --name ${containerName} -p 3001:3001 ${imageName}"
                 }
             }
         }
