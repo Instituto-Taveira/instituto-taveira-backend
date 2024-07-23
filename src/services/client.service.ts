@@ -118,7 +118,6 @@ export class ClientService {
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<MappedClientDTO>> {
             const clients = await this.clientRepository.findAll(page, filters);
-            const loan = clients.items[0].loan;
 
             if (clients.total === 0) {
                   throw new HttpException(
