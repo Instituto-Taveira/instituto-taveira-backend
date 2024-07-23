@@ -6,10 +6,7 @@ import { UpdateClientDto } from 'src/dto/client/updateClient.dto';
 export default interface IClientRepository {
       create(data: Client): Promise<Client>;
       delete(id: string): Promise<Client>;
-      findAll(
-            page: Page,
-            filters?: FiltersClientDTO,
-      ): Promise<PageResponse<Client>>;
+      findAll(page: Page, filters?: FiltersClientDTO): Promise<any>;
       findAllPaymentTrue(
             page: Page,
             filters?: FiltersClientDTO,

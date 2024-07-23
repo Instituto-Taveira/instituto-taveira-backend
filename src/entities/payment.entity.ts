@@ -7,7 +7,7 @@ export class Payment {
       value: number;
       valuePaid: number;
       settled: boolean;
-      interestDelay?: IterestDelay;
+      iterestDelay?: IterestDelay;
       loan: Loan;
       loanId: string;
       dueDate: Date;

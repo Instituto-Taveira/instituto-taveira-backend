@@ -18,13 +18,10 @@ export class ClientRepository
       constructor(private readonly repository: PrismaService) {
             super();
       }
-      async findAll(
-            page: Page,
-            filters?: FiltersClientDTO,
-      ): Promise<PageResponse<Client>> {
+      async findAll(page: Page, filters?: FiltersClientDTO): Promise<any> {
             const condition = generateQueryByFiltersForClient(filters);
 
-            const items = condition
+            const items: any = condition
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),
                           where: condition,
