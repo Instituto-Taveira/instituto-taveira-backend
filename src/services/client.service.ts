@@ -62,7 +62,6 @@ export class ClientService {
                         HttpStatus.NOT_FOUND,
                   );
             }
-            console.log(clients.items);
             const items = this.toDTO(clients.items);
 
             items.map((client) => {
@@ -274,6 +273,8 @@ export class ClientService {
                         name: client.name,
                         fone: client.fone,
                         address: client.address,
+                        attendant: client.attendant ?? '',
+                        observation: client.observation ?? '',
                         loanOpen,
                         status,
                         nextPayment: nextPayment

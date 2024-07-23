@@ -1,5 +1,12 @@
 import { Transform, TransformFnParams, Type } from 'class-transformer';
-import { IsString, IsNotEmpty, Length, ValidateNested, IsArray } from 'class-validator';
+import {
+      IsString,
+      IsNotEmpty,
+      Length,
+      ValidateNested,
+      IsArray,
+      IsOptional,
+} from 'class-validator';
 import { CreateLoanDto } from '../loan/create-loan.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateAddressDto } from '../address/create-address.dto';
@@ -19,12 +26,22 @@ export class CreateClientDto {
       @Transform(({ value }: TransformFnParams) => value?.trim())
       fone: string;
 
+      @IsString()
       @ApiProperty()
-      @ValidateNested() 
+      @IsOptional()
+      attendant?: string;
+
+      @IsString()
+      @ApiProperty()
+      @IsOptional()
+      observation?: string;
+
+      @ApiProperty()
+      @ValidateNested()
       @Type(() => CreateAddressDto)
       address: CreateAddressDto;
 
-      @ValidateNested() 
+      @ValidateNested()
       @Type(() => CreateLoanDto)
       loan: CreateLoanDto[];
 }

@@ -18,13 +18,15 @@ model User {
 }
 
 model Client {
-  id        String    @id @unique
-  name      String
-  fone      String
-  address   Address?
-  loan      Loan[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
+  id          String    @id @unique
+  name        String
+  fone        String
+  attendant   String?
+  observation String?
+  address     Address?
+  loan        Loan[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
 }
 
 model Address {

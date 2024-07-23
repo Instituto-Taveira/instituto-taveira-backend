@@ -13,7 +13,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       }
 
       async validate(login: string, password: string): Promise<any> {
-            console.log('bati aqui');
             const user = await this.authService.validateUser(login, password);
             if (!user) {
                   throw new UnauthorizedException('nice');

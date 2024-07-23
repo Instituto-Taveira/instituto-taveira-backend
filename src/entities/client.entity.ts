@@ -7,6 +7,8 @@ export class Client {
       name: string;
       fone: string;
       address: Address;
+      attendant?: string;
+      observation?: string;
       loan: Loan[];
       createdAt?: Date;
       updatedAt?: Date | null;

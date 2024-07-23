@@ -5,6 +5,8 @@ export class User {
       name: string;
       login: string;
       password: string;
+      attendant?: string;
+      observation?: string;
       isAdm: boolean;
       createdAt: Date;
       updatedAt?: Date | null;

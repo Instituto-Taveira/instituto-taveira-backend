@@ -289,6 +289,8 @@ export class ClientRepository
                         id: data.id,
                         name: data.name,
                         fone: data.fone,
+                        attendant: data.attendant,
+                        observation: data.observation,
                         address: {
                               create: {
                                     id: data.address.id,
