@@ -11,6 +11,10 @@ export default interface ILoanRepository {
             clientId: string,
       ): Promise<Loan>;
       update(id: string): Promise<Loan>;
-      updateRestLoan(id: string, rest_loan: number): Promise<Loan>;
+      updateRestLoan(
+            id: string,
+            rest_loan: number,
+            settle: boolean,
+      ): Promise<Loan>;
       updateInstalment(id: string, data: CreateNewDueDto): Promise<Loan>;
 }

@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import { Payment } from './payment.entity';
 
 export enum EFormatInstalment {
       MONTHLY = 1,
@@ -14,6 +15,7 @@ export class Loan {
       format_instalment: EFormatInstalment;
       startDate: Date;
       dueDate: Date;
+      payment?: Payment[];
       payment_settled?: boolean;
       clientId?: string;
       createdAt?: Date;

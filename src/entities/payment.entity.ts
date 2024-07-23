@@ -1,3 +1,4 @@
+import { IterestDelay } from './iterestDelay.entity';
 import { Loan } from './loan.entity';
 import { v4 as uuid } from 'uuid';
 
@@ -6,6 +7,7 @@ export class Payment {
       value: number;
       valuePaid: number;
       settled: boolean;
+      interestDelay?: IterestDelay;
       loan: Loan;
       loanId: string;
       dueDate: Date;

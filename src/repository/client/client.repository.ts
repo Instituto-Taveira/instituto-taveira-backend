@@ -30,14 +30,36 @@ export class ClientRepository
                           where: condition,
                           include: {
                                 address: true,
-                                loan: true,
+                                loan: {
+                                      include: {
+                                            payment: {
+                                                  include: {
+                                                        iterestDelay: true,
+                                                  },
+                                                  orderBy: {
+                                                        dueDate: 'asc',
+                                                  },
+                                            },
+                                      },
+                                },
                           },
                     })
                   : await this.repository.client.findMany({
                           ...this.buildPage(page),
                           include: {
                                 address: true,
-                                loan: true,
+                                loan: {
+                                      include: {
+                                            payment: {
+                                                  include: {
+                                                        iterestDelay: true,
+                                                  },
+                                                  orderBy: {
+                                                        dueDate: 'asc',
+                                                  },
+                                            },
+                                      },
+                                },
                           },
                     });
 
@@ -54,7 +76,7 @@ export class ClientRepository
                   Array.isArray(total) ? total.length : total,
             );
       }
-      findById(id: string): Promise<Client> {
+      findById(id: string): Promise<any> {
             return this.repository.client.findUnique({
                   where: { id },
 

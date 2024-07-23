@@ -141,10 +141,11 @@ export class LoanService {
                   );
 
             await this.paymentService.updateInstalment(payment.id, payload);
-
-            await this.loanRepository.updateRestLoan(
+            const rest_loan = payment.loan.rest_loan - payload.valuePaid;
+            const loan = await this.loanRepository.updateRestLoan(
                   payment.loanId,
-                  payment.loan.rest_loan - payload.valuePaid,
+                  rest_loan,
+                  rest_loan === 0,
             );
 
             return {

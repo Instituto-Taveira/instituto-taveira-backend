@@ -118,6 +118,7 @@ export class ClientService {
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<MappedClientDTO>> {
             const clients = await this.clientRepository.findAll(page, filters);
+            const loan = clients.items[0].loan;
 
             if (clients.total === 0) {
                   throw new HttpException(
@@ -209,7 +210,9 @@ export class ClientService {
 
       private toDTO(clients: Client[]): MappedClientDTO[] {
             return clients.map((client) => {
-                  let loanOpen = false;
+                  let loanOpen = 'Não';
+                  let nextPayment = null;
+                  let status = 'Em dia';
                   let total = 0;
                   let pagar = 0;
 
@@ -217,14 +220,55 @@ export class ClientService {
                         total = total + item.value_loan;
                   });
 
-                  client.loan.forEach((item) => {
-                        console.log(item.payment_settled);
-                        if (item.payment_settled === false) {
-                              console.log('entrou');
-                              loanOpen = true;
+                  client.loan.forEach((loan) => {
+                        if (loan.payment_settled === false) loanOpen = 'Sim';
+                        pagar = (total * loan.interest_rate) / 100 + total;
+
+                        if (loan.payment_settled === false) {
+                              loan.payment.forEach((payment) => {
+                                    if (!payment.settled) {
+                                          if (!nextPayment)
+                                                nextPayment = payment;
+
+                                          if (
+                                                nextPayment.dueDate >
+                                                payment.dueDate
+                                          )
+                                                nextPayment = payment;
+                                    }
+                              });
                         }
-                        pagar = (total * item.interest_rate) / 100 + total;
                   });
+
+                  if (nextPayment) {
+                        const dueDate = moment
+                              .utc(nextPayment.dueDate)
+                              .startOf('day');
+                        const now = moment
+                              .utc()
+                              .subtract(4, 'hours')
+                              .startOf('day');
+                        const threeDaysLater = moment
+                              .utc()
+                              .add(3, 'days')
+                              .startOf('day');
+                        if (dueDate.isBefore(now, 'day')) {
+                              status = 'Atrasado';
+                        } else if (dueDate.isSame(now, 'day')) {
+                              status = 'Hoje';
+                        } else if (
+                              dueDate.isBetween(
+                                    now,
+                                    threeDaysLater,
+                                    'day',
+                                    '[]',
+                              )
+                        ) {
+                              status = 'Em 3 dias';
+                        } else {
+                              status = 'Em dia';
+                        }
+                  }
 
                   return {
                         id: client.id,
@@ -232,6 +276,15 @@ export class ClientService {
                         fone: client.fone,
                         address: client.address,
                         loanOpen,
+                        status,
+                        nextPayment: nextPayment
+                              ? {
+                                      ...nextPayment,
+                                      dueDate: moment(nextPayment.dueDate)
+                                            .utc()
+                                            .format('DD/MM/YYYY'),
+                                }
+                              : null,
                         loan: client.loan,
                         total,
                         pagar,

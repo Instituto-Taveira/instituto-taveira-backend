@@ -12,13 +12,18 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
       constructor(private readonly repository: PrismaService) {
             super();
       }
-      updateRestLoan(id: string, rest_loan: number): Promise<Loan> {
+      updateRestLoan(
+            id: string,
+            rest_loan: number,
+            settle: boolean,
+      ): Promise<Loan> {
             return this.repository.loan.update({
                   where: {
                         id,
                   },
                   data: {
                         rest_loan,
+                        payment_settled: settle,
                   },
             });
       }
