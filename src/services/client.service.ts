@@ -116,6 +116,7 @@ export class ClientService {
             page: Page,
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<MappedClientDTO>> {
+            console.log(page);
             const clients = await this.clientRepository.findAll(page, filters);
 
             if (clients.total === 0) {

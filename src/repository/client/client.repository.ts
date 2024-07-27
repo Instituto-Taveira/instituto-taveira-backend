@@ -90,6 +90,9 @@ export class ClientRepository
                                           },
                                     },
                               },
+                              orderBy: {
+                                    payment_settled: 'asc',
+                              },
                         },
                   },
             });
