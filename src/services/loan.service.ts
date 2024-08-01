@@ -152,6 +152,47 @@ export class LoanService {
                   message: 'Instalment updated',
             };
       }
+
+      async updatePartialInstalment(id: string, payload: UpdatePaymentLoan) {
+            const payment = await this.paymentService.findById(id);
+
+            if (!payment)
+                  throw new HttpException(
+                        `Não foi encontrado um pagamento com o id: ${id}`,
+                        HttpStatus.NOT_FOUND,
+                  );
+            if (payment.settled)
+                  throw new HttpException(
+                        `O pagamento com o id: ${id} já foi liquidado`,
+                        HttpStatus.BAD_REQUEST,
+                  );
+            if (payload.valuePaid > payment.value)
+                  throw new HttpException(
+                        `O valor pago é maior que o valor da parcela`,
+                        HttpStatus.BAD_REQUEST,
+                  );
+
+            await this.paymentService.updateInstalment(payment.id, payload);
+            const rest_loan = payment.loan.rest_loan - payload.valuePaid;
+            await this.loanRepository.updateRestLoan(
+                  payment.loanId,
+                  rest_loan,
+                  true,
+            );
+
+            const createNewPayment: CreateLoanDto = {
+                  value_loan: rest_loan,
+                  format_instalment: payment.loan.format_instalment,
+                  interest_rate: payment.loan.interest_rate,
+                  start_date: payment.dueDate,
+            };
+
+            await this.create(createNewPayment, payment.loan.clientId);
+
+            return {
+                  message: 'Instalment updated',
+            };
+      }
       private convertToInstallments(format_instalment: EFormatInstalment) {
             switch (format_instalment) {
                   case EFormatInstalment.MONTHLY:

@@ -25,6 +25,9 @@ export class ClientRepository
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),
                           where: condition,
+                          orderBy: {
+                                createdAt: 'desc',
+                          },
                           include: {
                                 address: true,
                                 loan: {
@@ -43,6 +46,9 @@ export class ClientRepository
                     })
                   : await this.repository.client.findMany({
                           ...this.buildPage(page),
+                          orderBy: {
+                                createdAt: 'desc',
+                          },
                           include: {
                                 address: true,
                                 loan: {

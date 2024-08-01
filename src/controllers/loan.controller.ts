@@ -19,10 +19,9 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 export class LoanController {
       constructor(private readonly loanService: LoanService) {}
 
-      @ApiOperation({ 
+      @ApiOperation({
             summary: 'Criar Empréstimo',
-            description:
-                  'Utilize este endpoint para criar um novo empréstimo.',
+            description: 'Utilize este endpoint para criar um novo empréstimo.',
       })
       @Post('/:clientId')
       create(
@@ -67,8 +66,7 @@ export class LoanController {
 
       @ApiOperation({
             summary: 'Atualizar Empréstimo',
-            description:
-                  'Utilize este endpoint para atualizar um empréstimo.',
+            description: 'Utilize este endpoint para atualizar um empréstimo.',
       })
       @Put(':id')
       update(@Param('id') id: string) {
@@ -77,8 +75,7 @@ export class LoanController {
 
       @ApiOperation({
             summary: 'Atualizar Parcela',
-            description:
-                  'Utilize este endpoint para atualizar uma parcela.',
+            description: 'Utilize este endpoint para atualizar uma parcela.',
       })
       @Put('/instalment/:id')
       async updateInstalment(
@@ -92,9 +89,24 @@ export class LoanController {
       }
 
       @ApiOperation({
-            summary: 'Deletar Empréstimo',
+            summary: 'Atualizar Parcela para pagamento Parcial',
             description:
-                  'Utilize este endpoint para deletar um empréstimo.',
+                  'Utilize este endpoint para atualizar uma parcela para pagamento parcial.',
+      })
+      @Put('/instalment-partial/:id')
+      async updatePartialInstalment(
+            @Param('id') id: string,
+            @Body() payload: UpdatePaymentLoan,
+      ) {
+            await this.loanService.updatePartialInstalment(id, payload);
+            return {
+                  message: 'Pagamento parcial atualizado',
+            };
+      }
+
+      @ApiOperation({
+            summary: 'Deletar Empréstimo',
+            description: 'Utilize este endpoint para deletar um empréstimo.',
       })
       @Delete(':id')
       remove(@Param('id') id: string) {
