@@ -1,5 +1,11 @@
 import { Transform, TransformFnParams } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsString, Length } from 'class-validator';
+import {
+      IsArray,
+      IsNotEmpty,
+      IsOptional,
+      IsString,
+      Length,
+} from 'class-validator';
 import { UpdateAddressDto } from '../address/update-address.dto';
 import { UpdateLoanDto } from '../loan/update-loan.dto';
 import { ApiProperty } from '@nestjs/swagger';
@@ -25,4 +31,14 @@ export class UpdateClientDto {
       @ApiProperty()
       @IsArray()
       loan: UpdateLoanDto[];
+
+      @ApiProperty()
+      @IsString()
+      @IsOptional()
+      attendant: string;
+
+      @ApiProperty()
+      @IsString()
+      @IsOptional()
+      observation: string;
 }

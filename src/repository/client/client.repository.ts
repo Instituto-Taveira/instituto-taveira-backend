@@ -348,6 +348,8 @@ export class ClientRepository
                   data: {
                         name: data.name,
                         fone: data.fone,
+                        attendant: data.attendant,
+                        observation: data.observation,
                         address: {
                               update: {
                                     city: data.address.city,
