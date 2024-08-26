@@ -20,7 +20,7 @@ export function generateQueryByFiltersForClient(
                         some: {
                               payment: {
                                     some: {
-                                          settle: false,
+                                          settled: false,
                                           dueDate: {
                                                 gte: new Date(
                                                       filters.initialDate,
