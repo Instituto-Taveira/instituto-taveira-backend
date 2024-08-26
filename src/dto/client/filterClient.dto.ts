@@ -7,11 +7,15 @@ export class FiltersClientDTO {
       @ApiProperty()
       @IsOptional()
       id?: string;
-      
+
       @IsOptional()
       @ApiProperty()
       name?: string;
-      
+
+      @IsOptional()
+      @ApiProperty()
+      attendant?: string;
+
       @IsOptional()
       @ApiProperty()
       fone?: string;
@@ -19,7 +23,7 @@ export class FiltersClientDTO {
       @ApiProperty()
       @IsOptional()
       address?: Address;
-      
+
       @ApiProperty()
       @IsOptional()
       loan?: Loan[];

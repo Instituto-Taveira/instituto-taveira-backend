@@ -58,7 +58,7 @@ export class ClientService {
 
             if (clients.total === 0) {
                   throw new HttpException(
-                        'Não existe client para esta pesquisa!',
+                        'Não existe resultado para essa pesquisa!',
                         HttpStatus.NOT_FOUND,
                   );
             }
@@ -90,7 +90,7 @@ export class ClientService {
 
             if (clients.total === 0) {
                   throw new HttpException(
-                        'Não existe client para esta pesquisa!',
+                        'Não existe resultado para essa pesquisa!',
                         HttpStatus.NOT_FOUND,
                   );
             }
@@ -121,7 +121,7 @@ export class ClientService {
 
             if (clients.total === 0) {
                   throw new HttpException(
-                        'Não existe client para esta pesquisa!',
+                        'Não existe resultado para essa pesquisa!',
                         HttpStatus.NOT_FOUND,
                   );
             }

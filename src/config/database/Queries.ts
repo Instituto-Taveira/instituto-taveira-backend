@@ -9,6 +9,12 @@ export function generateQueryByFiltersForClient(
             name: () => ({
                   name: { contains: filters.name, mode: 'insensitive' },
             }),
+            attendant: () => ({
+                  attendant: {
+                        contains: filters.attendant,
+                        mode: 'insensitive',
+                  },
+            }),
             fone: () => ({
                   fone: filters.fone,
             }),
