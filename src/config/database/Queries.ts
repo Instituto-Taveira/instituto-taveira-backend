@@ -15,6 +15,24 @@ export function generateQueryByFiltersForClient(
                         mode: 'insensitive',
                   },
             }),
+            initialDate: () => ({
+                  loan: {
+                        some: {
+                              payment: {
+                                    some: {
+                                          dueDate: {
+                                                gte: new Date(
+                                                      filters.initialDate,
+                                                ).toISOString(),
+                                                lte: new Date(
+                                                      filters.finalDate,
+                                                ).toISOString(),
+                                          },
+                                    },
+                              },
+                        },
+                  },
+            }),
             fone: () => ({
                   fone: filters.fone,
             }),
@@ -45,6 +63,6 @@ export function generateQueryByFiltersForClient(
                   }
             }
       }
-
+      // console.log(query.loan.every.payment.every);
       return query;
 }

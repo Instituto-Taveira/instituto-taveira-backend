@@ -20,6 +20,14 @@ export class FiltersClientDTO {
       @ApiProperty()
       fone?: string;
 
+      @IsOptional()
+      @ApiProperty()
+      initialDate?: string;
+
+      @IsOptional()
+      @ApiProperty()
+      finalDate?: string;
+
       @ApiProperty()
       @IsOptional()
       address?: Address;

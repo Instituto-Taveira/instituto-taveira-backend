@@ -20,7 +20,6 @@ export class ClientRepository
       }
       async findAll(page: Page, filters?: FiltersClientDTO): Promise<any> {
             const condition = generateQueryByFiltersForClient(filters);
-
             const items: any = condition
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),
@@ -46,6 +45,7 @@ export class ClientRepository
                     })
                   : await this.repository.client.findMany({
                           ...this.buildPage(page),
+
                           orderBy: {
                                 createdAt: 'desc',
                           },
