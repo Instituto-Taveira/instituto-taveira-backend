@@ -68,7 +68,7 @@ export class LoanService {
                               loan,
                               startDate,
                               installments,
-                              (date, count) => date.add(count * 2, 'week'),
+                              (date, count) => date.add(count * 15, 'days'),
                         );
                         break;
                   case EFormatInstalment.WEEKLY:
