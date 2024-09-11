@@ -174,11 +174,7 @@ export class LoanService {
 
             await this.paymentService.updateInstalment(payment.id, payload);
             const rest_loan = payment.loan.rest_loan - payload.valuePaid;
-            await this.loanRepository.updateRestLoan(
-                  payment.loanId,
-                  rest_loan,
-                  true,
-            );
+            await this.loanRepository.updateRestLoan(payment.loanId, 0, true);
 
             const createNewPayment: CreateLoanDto = {
                   value_loan: rest_loan,
