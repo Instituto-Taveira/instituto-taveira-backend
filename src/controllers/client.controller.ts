@@ -19,6 +19,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { Private } from 'src/decorators/private.decorator';
 import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
+import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 
 @ApiTags('Client')
 @ApiBearerAuth()
@@ -101,5 +102,15 @@ export class ClientController {
       @Delete(':id')
       remove(@Param('id') id: string) {
             return this.clientService.delete(id);
+      }
+
+      @ApiOperation({
+            summary: 'Gerar relatório de Empréstimos',
+            description:
+                  'Utilize este endpoint para gerar um relatório de empréstimos.',
+      })
+      @Post('/report/all')
+      report(@Body() payload: GenerateReportLoanDto) {
+            return this.clientService.report(payload);
       }
 }

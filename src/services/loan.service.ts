@@ -12,6 +12,7 @@ import { ClientService } from './client.service';
 import * as moment from 'moment';
 import { PaymentService } from './payment.service';
 import { UpdatePaymentLoan } from 'src/dto/loan/update-payment.dto';
+import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 
 @Injectable()
 export class LoanService {

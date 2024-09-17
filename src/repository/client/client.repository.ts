@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { generateQueryByFiltersForClient } from '../../config/database/Queries';
+import {
+      generateQueryByFiltersForClient,
+      generateQueryByFiltersForReport,
+} from '../../config/database/Queries';
 import { Page, PageResponse } from '../../config/database/page.model';
 import { Pageable } from '../../config/database/pageable.service';
 import { PrismaService } from '../../config/database/prisma.service';
@@ -9,6 +12,7 @@ import IClientRepository from './client.repository.contract';
 import { Loan } from '../../entities/loan.entity';
 import { UpdateClientDto } from '../../dto/client/updateClient.dto';
 import { Client as PrismaClient, Prisma } from '@prisma/client';
+import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 
 @Injectable()
 export class ClientRepository
@@ -166,6 +170,18 @@ export class ClientRepository
       //       // Constrói a resposta da página com base nos itens e no total de itens
       //       return this.buildPageResponse(items, Array.isArray(total) ? total.length : total);
       // }
+
+      async generateReport(data: GenerateReportLoanDto): Promise<Client[]> {
+            const condition = generateQueryByFiltersForReport(data);
+
+            return this.repository.client.findMany({
+                  where: condition,
+                  include: {
+                        loan: true,
+                        address: true,
+                  },
+            });
+      }
 
       async findAllPaymentTrue(
             page: Page,

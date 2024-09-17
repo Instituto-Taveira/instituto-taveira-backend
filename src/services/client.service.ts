@@ -15,6 +15,7 @@ import { CreateClientDto } from '../dto/client/createClient.dto';
 import { UpdateClientDto } from '../dto/client/updateClient.dto';
 import * as moment from 'moment';
 import { LoanService } from './loan.service';
+import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 
 @Injectable()
 export class ClientService {
@@ -205,6 +206,122 @@ export class ClientService {
             const client = await this.listById(id);
 
             return await this.clientRepository.delete(client.id);
+      }
+
+      async report(payload: GenerateReportLoanDto) {
+            console.log(payload);
+            const initial = payload.initialDate
+                  ? new Date(payload.initialDate)
+                  : new Date(
+                          new Date().setFullYear(new Date().getFullYear() - 50),
+                    );
+
+            const final = payload.finalDate
+                  ? new Date(payload.finalDate)
+                  : new Date(
+                          new Date().setFullYear(new Date().getFullYear() + 50),
+                    );
+            const clients = await this.clientRepository.generateReport({
+                  initialDate: initial.toISOString().split('T')[0],
+                  finalDate: final.toISOString().split('T')[0],
+                  status: payload.status,
+                  attendant: payload.attendant,
+            });
+
+            console.log(initial, final);
+
+            const response = clients
+                  .filter((client) => client.attendant === payload.attendant)
+                  .map((client) => ({
+                        ...client,
+                        loan: client.loan.filter((loan) => {
+                              const loanStartDate = new Date(loan.startDate);
+                              const loanDueDate = new Date(loan.dueDate);
+                              const today = new Date();
+
+                              // Check if the loan is within the date range
+                              const withinDateRange =
+                                    loanStartDate >= initial &&
+                                    loanStartDate <= final;
+
+                              // Handle status filtering
+                              let statusMatch = false;
+
+                              switch (payload.status) {
+                                    case 'Pago':
+                                          statusMatch = loan.payment_settled;
+                                          break;
+                                    case 'Atrasado':
+                                          statusMatch =
+                                                !loan.payment_settled &&
+                                                loanDueDate < today;
+                                          break;
+                                    case 'Em dia':
+                                          statusMatch =
+                                                !loan.payment_settled &&
+                                                loanDueDate >= today;
+                                          break;
+                                    case 'Vencer em 3 dias':
+                                          const inThreeDays = new Date();
+                                          inThreeDays.setDate(
+                                                today.getDate() + 3,
+                                          );
+                                          statusMatch =
+                                                !loan.payment_settled &&
+                                                loanDueDate > today &&
+                                                loanDueDate <= inThreeDays;
+                                          break;
+                              }
+
+                              return withinDateRange && statusMatch;
+                        }),
+                  }))
+                  .filter((client) => client.loan.length > 0);
+            let valueLoaned = 0;
+            let valueToPay = 0;
+            const reduce = response.reduce((acc, curr) => {
+                  valueLoaned += curr.loan.reduce(
+                        (acc, curr) => acc + curr.value_loan,
+                        0,
+                  );
+
+                  console.log(valueLoaned);
+                  valueToPay += curr.loan.reduce(
+                        (acc, curr) =>
+                              acc +
+                              (curr.value_loan * curr.interest_rate) / 100 +
+                              curr.value_loan,
+                        0,
+                  );
+
+                  acc.push({
+                        name: curr.name,
+                        loans: curr.loan,
+                        total: curr.loan.reduce(
+                              (acc, curr) => acc + curr.value_loan,
+                              0,
+                        ),
+                        pagar: curr.loan.reduce(
+                              (acc, curr) =>
+                                    acc +
+                                    (curr.value_loan * curr.interest_rate) /
+                                          100 +
+                                    curr.value_loan,
+                              0,
+                        ),
+                  });
+                  return acc;
+            }, []);
+
+            return {
+                  attendant: payload.attendant,
+                  initialDate: payload.initialDate,
+                  finalDate: payload.finalDate,
+                  status: payload.status,
+                  valueLoaned,
+                  valueToPay,
+                  clients: reduce,
+            };
       }
 
       private toDTO(clients: Client[]): MappedClientDTO[] {

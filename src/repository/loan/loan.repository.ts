@@ -6,12 +6,15 @@ import { Loan } from '../../entities/loan.entity';
 import { UpdateLoanDto } from 'src/dto/loan/update-loan.dto';
 import { CreatePaymentDto } from 'src/dto/payment/createPayment.dto';
 import { CreateNewDueDto } from 'src/dto/loan/create-new-due.dto';
+import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { generateQueryByFiltersForReport } from 'src/config/database/Queries';
 
 @Injectable()
 export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
       constructor(private readonly repository: PrismaService) {
             super();
       }
+
       updateRestLoan(
             id: string,
             rest_loan: number,

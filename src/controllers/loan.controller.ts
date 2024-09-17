@@ -12,6 +12,7 @@ import { CreateLoanDto } from '../dto/loan/create-loan.dto';
 import { UpdateLoanDto } from '../dto/loan/update-loan.dto';
 import { UpdatePaymentLoan } from 'src/dto/loan/update-payment.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 
 @ApiTags('Loan')
 @ApiBearerAuth()
