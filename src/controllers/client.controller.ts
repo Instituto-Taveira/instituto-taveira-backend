@@ -20,6 +20,7 @@ import { IsPublic } from 'src/decorators/public.decorator';
 import { Private } from 'src/decorators/private.decorator';
 import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
 
 @ApiTags('Client')
 @ApiBearerAuth()
@@ -112,5 +113,15 @@ export class ClientController {
       @Post('/report/all')
       report(@Body() payload: GenerateReportLoanDto) {
             return this.clientService.report(payload);
+      }
+
+      @ApiOperation({
+            summary: 'Gerar relatório de Empréstimos dos clientes',
+            description:
+                  'Utilize este endpoint para gerar um relatório de empréstimos de um cliente.',
+      })
+      @Post('/report/client')
+      reportClient(@Body() payload: GenerateReportLoanClientDto) {
+            return this.clientService.reportClient(payload);
       }
 }

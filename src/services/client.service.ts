@@ -16,6 +16,7 @@ import { UpdateClientDto } from '../dto/client/updateClient.dto';
 import * as moment from 'moment';
 import { LoanService } from './loan.service';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
 
 @Injectable()
 export class ClientService {
@@ -321,6 +322,36 @@ export class ClientService {
                   valueLoaned,
                   valueToPay,
                   clients: reduce,
+            };
+      }
+
+      async reportClient(payload: GenerateReportLoanClientDto) {
+            const client = await this.clientRepository.generateReportClient({
+                  name: payload.name,
+            });
+            if (!client) {
+                  throw new HttpException(
+                        'Cliente não encontrado!',
+                        HttpStatus.NOT_FOUND,
+                  );
+            }
+            let valueLoaned = 0;
+            let valueToPay = 0;
+
+            const loans = client.loan.reduce((acc, curr) => {
+                  valueLoaned += curr.value_loan;
+                  valueToPay +=
+                        (curr.value_loan * curr.interest_rate) / 100 +
+                        curr.value_loan;
+                  return acc;
+            }, []);
+
+            return {
+                  name: client.name,
+                  attendant: client.attendant,
+                  valueLoaned,
+                  valueToPay,
+                  loans: client.loan,
             };
       }
 

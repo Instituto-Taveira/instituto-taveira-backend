@@ -3,6 +3,7 @@ import { Page, PageResponse } from '../../config/database/page.model';
 import { Client } from '../../entities/client.entity';
 import { UpdateClientDto } from 'src/dto/client/updateClient.dto';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
 
 export default interface IClientRepository {
       create(data: Client): Promise<Client>;
@@ -13,7 +14,7 @@ export default interface IClientRepository {
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<Client>>;
       generateReport(data: GenerateReportLoanDto): Promise<Client[]>;
-
+      generateReportClient(data: GenerateReportLoanClientDto): Promise<Client>;
       findAllPaymentFalse(
             page: Page,
             filters?: FiltersClientDTO,

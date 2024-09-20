@@ -13,6 +13,7 @@ import { Loan } from '../../entities/loan.entity';
 import { UpdateClientDto } from '../../dto/client/updateClient.dto';
 import { Client as PrismaClient, Prisma } from '@prisma/client';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
 
 @Injectable()
 export class ClientRepository
@@ -21,6 +22,23 @@ export class ClientRepository
 {
       constructor(private readonly repository: PrismaService) {
             super();
+      }
+      generateReportClient(data: GenerateReportLoanClientDto): Promise<any> {
+            return this.repository.client.findFirst({
+                  where: {
+                        name: {
+                              contains: data.name,
+                        },
+                  },
+                  include: {
+                        address: true,
+                        loan: {
+                              include: {
+                                    payment: true,
+                              },
+                        },
+                  },
+            });
       }
       async findAll(page: Page, filters?: FiltersClientDTO): Promise<any> {
             const condition = generateQueryByFiltersForClient(filters);
