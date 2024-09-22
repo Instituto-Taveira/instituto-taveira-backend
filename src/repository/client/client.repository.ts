@@ -23,11 +23,14 @@ export class ClientRepository
       constructor(private readonly repository: PrismaService) {
             super();
       }
-      generateReportClient(data: GenerateReportLoanClientDto): Promise<any> {
-            return this.repository.client.findFirst({
+      async generateReportClient(
+            data: GenerateReportLoanClientDto,
+      ): Promise<any> {
+            return await this.repository.client.findFirst({
                   where: {
                         name: {
                               contains: data.name,
+                              mode: 'insensitive',
                         },
                   },
                   include: {
@@ -40,6 +43,15 @@ export class ClientRepository
                   },
             });
       }
+
+      async listAllClients(): Promise<Partial<Client>[]> {
+            return await this.repository.client.findMany({
+                  orderBy: {
+                        name: 'asc',
+                  },
+            });
+      }
+
       async findAll(page: Page, filters?: FiltersClientDTO): Promise<any> {
             const condition = generateQueryByFiltersForClient(filters);
             const items: any = condition

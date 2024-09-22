@@ -124,4 +124,14 @@ export class ClientController {
       reportClient(@Body() payload: GenerateReportLoanClientDto) {
             return this.clientService.reportClient(payload);
       }
+
+      @ApiOperation({
+            summary: 'Listar nomes dos clientes',
+            description:
+                  'Utilize este endpoint para listar os nomes dos clientes.',
+      })
+      @Get('/names/all')
+      listClientsName() {
+            return this.clientService.listAllNames();
+      }
 }

@@ -15,6 +15,7 @@ export default interface IClientRepository {
       ): Promise<PageResponse<Client>>;
       generateReport(data: GenerateReportLoanDto): Promise<Client[]>;
       generateReportClient(data: GenerateReportLoanClientDto): Promise<Client>;
+      listAllClients(): Promise<Partial<Client>[]>;
       findAllPaymentFalse(
             page: Page,
             filters?: FiltersClientDTO,

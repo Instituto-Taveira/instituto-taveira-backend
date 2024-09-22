@@ -325,6 +325,15 @@ export class ClientService {
             };
       }
 
+      async listAllNames() {
+            const clients = await this.clientRepository.listAllClients();
+
+            return clients.map((client) => ({
+                  id: client.id,
+                  name: client.name,
+            }));
+      }
+
       async reportClient(payload: GenerateReportLoanClientDto) {
             const client = await this.clientRepository.generateReportClient({
                   name: payload.name,
