@@ -210,7 +210,6 @@ export class ClientService {
       }
 
       async report(payload: GenerateReportLoanDto) {
-            console.log(payload);
             const initial = payload.initialDate
                   ? new Date(payload.initialDate)
                   : new Date(
@@ -228,11 +227,8 @@ export class ClientService {
                   status: payload.status,
                   attendant: payload.attendant,
             });
-
-            console.log(initial, final);
-
+            console.log(clients.length);
             const response = clients
-                  .filter((client) => client.attendant === payload.attendant)
                   .map((client) => ({
                         ...client,
                         loan: client.loan.filter((loan) => {
@@ -247,7 +243,6 @@ export class ClientService {
 
                               // Handle status filtering
                               let statusMatch = false;
-
                               switch (payload.status) {
                                     case 'Pago':
                                           statusMatch = loan.payment_settled;
@@ -257,7 +252,7 @@ export class ClientService {
                                                 !loan.payment_settled &&
                                                 loanDueDate < today;
                                           break;
-                                    case 'Em dia':
+                                    case 'Em Dia':
                                           statusMatch =
                                                 !loan.payment_settled &&
                                                 loanDueDate >= today;
@@ -273,7 +268,6 @@ export class ClientService {
                                                 loanDueDate <= inThreeDays;
                                           break;
                               }
-
                               return withinDateRange && statusMatch;
                         }),
                   }))
@@ -286,7 +280,6 @@ export class ClientService {
                         0,
                   );
 
-                  console.log(valueLoaned);
                   valueToPay += curr.loan.reduce(
                         (acc, curr) =>
                               acc +
@@ -316,6 +309,7 @@ export class ClientService {
 
             return {
                   attendant: payload.attendant,
+                  totalClients: reduce.length,
                   initialDate: payload.initialDate,
                   finalDate: payload.finalDate,
                   status: payload.status,

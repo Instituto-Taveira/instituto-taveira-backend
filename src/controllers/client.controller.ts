@@ -111,8 +111,8 @@ export class ClientController {
                   'Utilize este endpoint para gerar um relatório de empréstimos.',
       })
       @Post('/report/all')
-      report(@Body() payload: GenerateReportLoanDto) {
-            return this.clientService.report(payload);
+      async report(@Body() payload: GenerateReportLoanDto) {
+            return await this.clientService.report(payload);
       }
 
       @ApiOperation({
@@ -121,8 +121,8 @@ export class ClientController {
                   'Utilize este endpoint para gerar um relatório de empréstimos de um cliente.',
       })
       @Post('/report/client')
-      reportClient(@Body() payload: GenerateReportLoanClientDto) {
-            return this.clientService.reportClient(payload);
+      async reportClient(@Body() payload: GenerateReportLoanClientDto) {
+            return await this.clientService.reportClient(payload);
       }
 
       @ApiOperation({

@@ -204,11 +204,14 @@ export class ClientRepository
       async generateReport(data: GenerateReportLoanDto): Promise<Client[]> {
             const condition = generateQueryByFiltersForReport(data);
 
-            return this.repository.client.findMany({
+            return await this.repository.client.findMany({
                   where: condition,
                   include: {
                         loan: true,
                         address: true,
+                  },
+                  orderBy: {
+                        name: 'asc',
                   },
             });
       }
