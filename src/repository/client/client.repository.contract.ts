@@ -13,7 +13,7 @@ export default interface IClientRepository {
             page: Page,
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<Client>>;
-      generateReport(data: GenerateReportLoanDto): Promise<Partial<Client>[]>;
+      generateReport(data: GenerateReportLoanDto): Promise<any[]>;
       generateReportClient(data: GenerateReportLoanClientDto): Promise<Client>;
       listAllClients(): Promise<Partial<Client>[]>;
       findAllPaymentFalse(
