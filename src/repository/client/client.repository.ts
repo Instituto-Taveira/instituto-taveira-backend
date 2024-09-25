@@ -201,7 +201,9 @@ export class ClientRepository
       //       return this.buildPageResponse(items, Array.isArray(total) ? total.length : total);
       // }
 
-      async generateReport(data: GenerateReportLoanDto): Promise<Client[]> {
+      async generateReport(
+            data: GenerateReportLoanDto,
+      ): Promise<Partial<Client>[]> {
             const condition = generateQueryByFiltersForReport(data);
 
             return await this.repository.client.findMany({
