@@ -152,7 +152,7 @@ export class ClientService {
                         `Não foi encontrado um client com o id: ${id}`,
                         HttpStatus.NOT_FOUND,
                   );
-
+            console.log(client);
             client.loan.forEach((loan) => {
                   let totalMoraSum = 0;
 
@@ -232,10 +232,19 @@ export class ClientService {
                   .map((client) => ({
                         ...client,
                         loan: client.loan.filter((loan) => {
-                              const loanStartDate = new Date(loan.startDate);
-                              const loanDueDate = new Date(loan.dueDate);
-                              const today = new Date();
-
+                              const loanStartDate = moment
+                                    .utc(loan.startDate)
+                                    .startOf('day')
+                                    .toDate();
+                              const loanDueDate = moment
+                                    .utc(loan.dueDate)
+                                    .startOf('day')
+                                    .toDate();
+                              const today = moment
+                                    .utc()
+                                    .subtract(4, 'hours')
+                                    .startOf('day')
+                                    .toDate();
                               // Check if the loan is within the date range
                               const withinDateRange =
                                     loanStartDate >= initial &&
@@ -248,9 +257,20 @@ export class ClientService {
                                           statusMatch = loan.payment_settled;
                                           break;
                                     case 'Atrasado':
-                                          statusMatch =
-                                                !loan.payment_settled &&
-                                                loanDueDate < today;
+                                          // statusMatch =
+                                          //       !loan.payment_settled &&
+                                          //       loanDueDate < today;
+                                          loan.payment.forEach((payment) => {
+                                                console.log(payment.dueDate);
+                                                console.log(today);
+                                                if (
+                                                      payment.dueDate < today &&
+                                                      !loan.payment_settled &&
+                                                      !payment.settled
+                                                ) {
+                                                      statusMatch = true;
+                                                }
+                                          });
                                           break;
                                     case 'Em Dia':
                                           statusMatch =

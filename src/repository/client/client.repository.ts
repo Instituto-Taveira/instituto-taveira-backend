@@ -207,7 +207,14 @@ export class ClientRepository
             return await this.repository.client.findMany({
                   where: condition,
                   include: {
-                        loan: true,
+                        loan: {
+                              include: {
+                                    payment: true,
+                              },
+                              orderBy: {
+                                    createdAt: 'desc',
+                              },
+                        },
                         address: true,
                   },
                   orderBy: {
