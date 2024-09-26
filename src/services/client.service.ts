@@ -118,7 +118,6 @@ export class ClientService {
             page: Page,
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<MappedClientDTO>> {
-            console.log(page);
             const clients = await this.clientRepository.findAll(page, filters);
 
             if (clients.total === 0) {
@@ -152,7 +151,6 @@ export class ClientService {
                         `Não foi encontrado um client com o id: ${id}`,
                         HttpStatus.NOT_FOUND,
                   );
-            console.log(client);
             client.loan.forEach((loan) => {
                   let totalMoraSum = 0;
 
@@ -221,75 +219,101 @@ export class ClientService {
                   : new Date(
                           new Date().setFullYear(new Date().getFullYear() + 50),
                     );
+
             const clients = await this.clientRepository.generateReport({
                   initialDate: initial.toISOString().split('T')[0],
                   finalDate: final.toISOString().split('T')[0],
                   status: payload.status,
                   attendant: payload.attendant,
             });
-            console.log(clients.length);
             const response = clients
                   .map((client) => ({
                         ...client,
-                        loan: client.loan.filter((loan) => {
-                              const loanStartDate = moment
-                                    .utc(loan.startDate)
-                                    .startOf('day')
-                                    .toDate();
-                              const loanDueDate = moment
-                                    .utc(loan.dueDate)
-                                    .startOf('day')
-                                    .toDate();
-                              const today = moment
-                                    .utc()
-                                    .subtract(4, 'hours')
-                                    .startOf('day')
-                                    .toDate();
-                              // Check if the loan is within the date range
-                              const withinDateRange =
-                                    loanStartDate >= initial &&
-                                    loanStartDate <= final;
+                        loan: client.loan
+                              .map((loan) => {
+                                    const loanStartDate = moment
+                                          .utc(loan.startDate)
+                                          .startOf('day')
+                                          .toDate();
+                                    const loanDueDate = moment
+                                          .utc(loan.dueDate)
+                                          .startOf('day')
+                                          .toDate();
+                                    const today = moment
+                                          .utc()
+                                          .subtract(4, 'hours')
+                                          .startOf('day')
+                                          .toDate();
+                                    let withinDateRange = false;
 
-                              // Handle status filtering
-                              let statusMatch = false;
-                              switch (payload.status) {
-                                    case 'Pago':
-                                          statusMatch = loan.payment_settled;
-                                          break;
-                                    case 'Atrasado':
-                                          // statusMatch =
-                                          //       !loan.payment_settled &&
-                                          //       loanDueDate < today;
-                                          loan.payment.forEach((payment) => {
-                                                console.log(payment.dueDate);
-                                                console.log(today);
-                                                if (
-                                                      payment.dueDate < today &&
+                                    let statusMatch = false;
+                                    let filteredPayments = [];
+                                    switch (payload.status) {
+                                          case 'Pago':
+                                                statusMatch =
+                                                      loan.payment_settled;
+                                                withinDateRange =
+                                                      loanStartDate >=
+                                                            initial &&
+                                                      loanDueDate <= final;
+                                                break;
+                                          case 'Atrasado':
+                                                filteredPayments =
+                                                      loan.payment.filter(
+                                                            (payment) => {
+                                                                  const paymentDueDate =
+                                                                        moment
+                                                                              .utc(
+                                                                                    payment.dueDate,
+                                                                              )
+                                                                              .startOf(
+                                                                                    'day',
+                                                                              )
+                                                                              .toDate();
+
+                                                                  withinDateRange =
+                                                                        paymentDueDate >=
+                                                                              initial &&
+                                                                        paymentDueDate <=
+                                                                              final;
+
+                                                                  return (
+                                                                        paymentDueDate <
+                                                                              today &&
+                                                                        !payment.settled &&
+                                                                        withinDateRange
+                                                                  );
+                                                            },
+                                                      );
+                                                statusMatch =
+                                                      filteredPayments.length >
+                                                      0;
+
+                                                break;
+                                          case 'Em Dia':
+                                                statusMatch =
                                                       !loan.payment_settled &&
-                                                      !payment.settled
-                                                ) {
-                                                      statusMatch = true;
-                                                }
-                                          });
-                                          break;
-                                    case 'Em Dia':
-                                          statusMatch =
-                                                !loan.payment_settled &&
-                                                loanDueDate >= today;
-                                          break;
-                                    case 'Vencer em 3 dias':
-                                          const inThreeDays = new Date();
-                                          inThreeDays.setDate(
-                                                today.getDate() + 3,
-                                          );
-                                          statusMatch =
-                                                !loan.payment_settled &&
-                                                loanDueDate > today &&
-                                                loanDueDate <= inThreeDays;
-                                          break;
-                              }
-                              return withinDateRange && statusMatch;
-                        }),
+                                                      loanDueDate >= today;
+                                                withinDateRange =
+                                                      loanStartDate >=
+                                                            initial &&
+                                                      loanDueDate <= final;
+                                                break;
+                                    }
+                                    return statusMatch
+                                          ? {
+                                                  ...loan,
+                                                  payment:
+                                                        filteredPayments.length >
+                                                              0 &&
+                                                        payload.status ===
+                                                              'Atrasado'
+                                                              ? filteredPayments
+                                                              : loan.payment,
+                                            }
+                                          : null;
+                              })
+                              .filter((loan) => loan !== null),
                   }))
                   .filter((client) => client.loan.length > 0);
             let valueLoaned = 0;
