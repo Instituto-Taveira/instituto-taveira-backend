@@ -258,6 +258,41 @@ export class ClientService {
                                                       loanDueDate <= final;
                                                 break;
                                           case 'Atrasado':
+                                                loan.payment.forEach(
+                                                      (payment) => {
+                                                            const paymentDueDate =
+                                                                  moment
+                                                                        .utc(
+                                                                              payment.dueDate,
+                                                                        )
+                                                                        .startOf(
+                                                                              'day',
+                                                                        )
+                                                                        .toDate();
+
+                                                            withinDateRange =
+                                                                  paymentDueDate >=
+                                                                        initial &&
+                                                                  paymentDueDate <=
+                                                                        final;
+
+                                                            if (
+                                                                  paymentDueDate <
+                                                                        today &&
+                                                                  !payment.settled &&
+                                                                  withinDateRange
+                                                            ) {
+                                                                  filteredPayments.push(
+                                                                        payment,
+                                                                  );
+                                                            }
+                                                      },
+                                                );
+                                                statusMatch =
+                                                      filteredPayments.length >
+                                                      0;
+                                                break;
+                                          case 'Atrasado Detalhado':
                                                 filteredPayments =
                                                       loan.payment.filter(
                                                             (payment) => {
