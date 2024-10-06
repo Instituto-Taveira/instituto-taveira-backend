@@ -33,13 +33,24 @@ export class UserController {
       }
 
       @ApiOperation({
-            summary: 'Listar Usuários',
+            summary: 'Login',
             description:
-                  'Utilize este endpoint para listar todos os usuários.',
+                  'Utilize este endpoint para buscar um usuário pelo login.',
       })
       @Get(':login')
       @UseGuards(JwtAuthGuard)
       findOne(@Param('login') login: string) {
             return this.userService.findOne(login);
+      }
+
+      @ApiOperation({
+            summary: 'Listar Usuários',
+            description:
+                  'Utilize este endpoint para listar todos os usuários cadastrados.',
+      })
+      @Get()
+      @UseGuards(JwtAuthGuard)
+      findAll() {
+            return this.userService.findAll();
       }
 }

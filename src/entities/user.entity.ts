@@ -5,16 +5,12 @@ export class User {
       name: string;
       login: string;
       password: string;
-      attendant?: string;
-      observation?: string;
+      isBlocked: boolean;
       isAdm: boolean;
       createdAt: Date;
       updatedAt?: Date | null;
 
-      constructor(
-            props: Omit<User, 'id' | 'createdAt' | 'password'>,
-            id?: string,
-      ) {
+      constructor(props: Omit<User, 'id' | 'createdAt'>, id?: string) {
             Object.assign(this, props);
             this.id = id ?? uuid();
       }

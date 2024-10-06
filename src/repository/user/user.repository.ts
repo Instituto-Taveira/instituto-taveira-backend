@@ -15,6 +15,7 @@ export class UserRepository implements IUserRepository {
                         name: data.name,
                         login: data.login,
                         password: data.password,
+                        isBlocked: data.isBlocked,
                         isAdm: data.isAdm,
                   },
             });
@@ -24,5 +25,9 @@ export class UserRepository implements IUserRepository {
             return await this.repository.user.findUnique({
                   where: { login },
             });
+      }
+
+      async findAll(): Promise<User[]> {
+            return await this.repository.user.findMany();
       }
 }
