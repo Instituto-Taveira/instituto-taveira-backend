@@ -28,6 +28,33 @@ export class UserRepository implements IUserRepository {
       }
 
       async findAll(): Promise<User[]> {
-            return await this.repository.user.findMany();
+            return await this.repository.user.findMany({
+                  orderBy: {
+                        isAdm: 'desc',
+                  },
+            });
+      }
+
+      async update(id: string, data: CreateUserDTO): Promise<User> {
+            return await this.repository.user.update({
+                  where: { id },
+                  data: {
+                        name: data.name,
+                        login: data.login,
+                        isAdm: data.isAdm,
+                  },
+            });
+      }
+
+      async findById(id: string): Promise<User> {
+            return await this.repository.user.findUnique({
+                  where: { id },
+            });
+      }
+
+      async delete(id: string): Promise<void> {
+            await this.repository.user.delete({
+                  where: { id },
+            });
       }
 }

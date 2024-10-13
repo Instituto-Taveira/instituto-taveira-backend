@@ -24,6 +24,7 @@ model Client {
   fone        String
   attendant   String?
   observation String?
+  approved    Boolean   @default(true)
   address     Address?
   loan        Loan[]
   createdAt   DateTime  @default(now())
@@ -53,6 +54,7 @@ model Loan {
   clientId          String
   startDate         DateTime
   dueDate           DateTime
+  approved          Boolean   @default(true)
   payment           Payment[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime?

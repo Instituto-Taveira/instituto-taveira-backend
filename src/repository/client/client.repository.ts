@@ -35,7 +35,11 @@ export class ClientRepository
                   },
                   include: {
                         address: true,
+
                         loan: {
+                              where: {
+                                    approved: true,
+                              },
                               include: {
                                     payment: true,
                               },
@@ -57,9 +61,9 @@ export class ClientRepository
             const items: any = condition
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),
-                          where: condition,
+                          where: { ...condition },
                           orderBy: {
-                                createdAt: 'desc',
+                                approved: 'asc',
                           },
                           include: {
                                 address: true,
@@ -207,6 +211,9 @@ export class ClientRepository
                   where: condition,
                   include: {
                         loan: {
+                              where: {
+                                    approved: true,
+                              },
                               include: {
                                     payment: true,
                               },
@@ -354,6 +361,7 @@ export class ClientRepository
                         name: data.name,
                         fone: data.fone,
                         attendant: data.attendant,
+                        approved: data.approved,
                         observation: data.observation,
                         address: {
                               create: {
@@ -370,6 +378,7 @@ export class ClientRepository
                                           id: loan.id,
                                           value_loan: loan.value_loan,
                                           interest_rate: loan.interest_rate,
+                                          approved: loan.approved,
                                           format_instalment:
                                                 loan.format_instalment,
                                           rest_loan: loan.rest_loan,
@@ -385,8 +394,8 @@ export class ClientRepository
                   },
             });
       }
-      delete(id: string): Promise<Client> {
-            return this.repository.client.delete({
+      async delete(id: string): Promise<Client> {
+            return await this.repository.client.delete({
                   where: { id },
                   include: {
                         address: true,
@@ -404,6 +413,7 @@ export class ClientRepository
                         name: data.name,
                         fone: data.fone,
                         attendant: data.attendant,
+                        approved: data.approved,
                         observation: data.observation,
                         address: {
                               update: {

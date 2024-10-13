@@ -17,6 +17,7 @@ import * as moment from 'moment';
 import { LoanService } from './loan.service';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class ClientService {
@@ -25,11 +26,22 @@ export class ClientService {
             private readonly clientRepository: IClientRepository,
             @Inject(forwardRef(() => LoanService))
             private readonly loanService: LoanService,
+            private readonly authService: AuthService,
       ) {}
 
-      async create(props: CreateClientDto): Promise<Client> {
+      async create(props: CreateClientDto, token: string): Promise<Client> {
+            const tokenDecoded = await this.authService.decodeJWT(token);
+
+            if (tokenDecoded.isAdm == false)
+                  props.attendant = tokenDecoded.name;
+
             const address = new Address(props.address);
-            const client = new Client({ ...props }, address, []);
+            const client = new Client(
+                  { ...props },
+                  address,
+                  [],
+                  tokenDecoded.isAdm,
+            );
             const result = await this.clientRepository.create(client);
 
             if (props.loan.length > 0) {
@@ -42,6 +54,7 @@ export class ClientService {
                                     start_date: loans.start_date,
                               },
                               client.id,
+                              token,
                         );
                   });
             }
@@ -116,8 +129,13 @@ export class ClientService {
 
       async listAll(
             page: Page,
+            token: string,
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<MappedClientDTO>> {
+            const tokenDecoded = await this.authService.decodeJWT(token);
+
+            if (tokenDecoded.isAdm == false)
+                  filters.attendant = tokenDecoded.name;
             const clients = await this.clientRepository.findAll(page, filters);
 
             if (clients.total === 0) {
@@ -127,7 +145,6 @@ export class ClientService {
                   );
             }
             const items = this.toDTO(clients.items);
-
             items.map((client) => {
                   let total: number;
 
@@ -193,7 +210,11 @@ export class ClientService {
       }
 
       async update(id: string, data: UpdateClientDto) {
-            const client = await this.listById(id);
+            const client: Client = await this.listById(id);
+
+            if (data.approved === false) {
+                  return await this.clientRepository.delete(client.id);
+            }
 
             return await this.clientRepository.update(
                   id,
@@ -444,13 +465,16 @@ export class ClientService {
                   let status = 'Em dia';
                   let total = 0;
                   let pagar = 0;
-
+                  let hasLoanToApprove = 'Não tem';
                   client.loan.forEach((item) => {
                         total = total + item.value_loan;
                   });
 
                   client.loan.forEach((loan) => {
                         if (loan.payment_settled === false) loanOpen = 'Sim';
+                        if (!loan.approved)
+                              hasLoanToApprove = 'Pendente Aprovação';
+
                         pagar = (total * loan.interest_rate) / 100 + total;
 
                         if (loan.payment_settled === false) {
@@ -506,6 +530,8 @@ export class ClientService {
                         address: client.address,
                         attendant: client.attendant ?? '',
                         observation: client.observation ?? '',
+                        approved: client.approved,
+                        hasLoanToApprove,
                         loanOpen,
                         status,
                         nextPayment: nextPayment

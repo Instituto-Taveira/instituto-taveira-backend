@@ -7,6 +7,7 @@ import {
       Delete,
       Put,
       Query,
+      Headers,
       UseGuards,
 } from '@nestjs/common';
 import { ClientService } from '../services/client.service';
@@ -16,8 +17,6 @@ import { FiltersClientDTO } from '../dto/client/filterClient.dto';
 import { Page, PageResponse } from 'src/config/database/page.model';
 import { MappedClientDTO } from 'src/dto/client/mappedClient.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsPublic } from 'src/decorators/public.decorator';
-import { Private } from 'src/decorators/private.decorator';
 import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
@@ -33,8 +32,12 @@ export class ClientController {
             description: 'Utilize este endpoint para criar um novo cliente.',
       })
       @Post()
-      create(@Body() createClientDto: CreateClientDto) {
-            return this.clientService.create(createClientDto);
+      @UseGuards(JwtAuthGuard)
+      create(
+            @Body() createClientDto: CreateClientDto,
+            @Headers('authorization') token: string,
+      ) {
+            return this.clientService.create(createClientDto, token);
       }
 
       @ApiOperation({
@@ -43,6 +46,7 @@ export class ClientController {
                   'Utilize este endpoint para listar todos os clientes com pagamentos pendentes.',
       })
       @Get('/notPayment')
+      @UseGuards(JwtAuthGuard)
       listAllFalse(
             @Query() page: Page,
             @Query() filters: FiltersClientDTO,
@@ -55,11 +59,13 @@ export class ClientController {
             description: 'Utilize este endpoint para listar todos os clientes.',
       })
       @Get('')
+      @UseGuards(JwtAuthGuard)
       async listAll(
             @Query() page: Page,
             @Query() filters: FiltersClientDTO,
+            @Headers('authorization') token: string,
       ): Promise<PageResponse<MappedClientDTO>> {
-            return await this.clientService.listAll(page, filters);
+            return await this.clientService.listAll(page, token, filters);
       }
 
       @ApiOperation({
@@ -68,6 +74,7 @@ export class ClientController {
                   'Utilize este endpoint para listar todos os clientes com pagamentos confirmados.',
       })
       @Get('/paymentConfirmed')
+      @UseGuards(JwtAuthGuard)
       listAllTrue(
             @Query() page: Page,
             @Query() filters: FiltersClientDTO,
@@ -79,6 +86,7 @@ export class ClientController {
             summary: 'Buscar Cliente',
             description: 'Utilize este endpoint para buscar um cliente por ID.',
       })
+      @UseGuards(JwtAuthGuard)
       @Get(':id')
       async listById(@Param('id') id: string) {
             return await this.clientService.listById(id);
@@ -88,18 +96,20 @@ export class ClientController {
             summary: 'Atualizar Cliente',
             description: 'Utilize este endpoint para atualizar um cliente.',
       })
+      @UseGuards(JwtAuthGuard)
       @Put(':id')
-      update(
+      async update(
             @Param('id') id: string,
             @Body() updateclientDto: UpdateClientDto,
       ) {
-            return this.clientService.update(id, updateclientDto);
+            return await this.clientService.update(id, updateclientDto);
       }
 
       @ApiOperation({
             summary: 'Deletar Cliente',
             description: 'Utilize este endpoint para deletar um cliente.',
       })
+      @UseGuards(JwtAuthGuard)
       @Delete(':id')
       remove(@Param('id') id: string) {
             return this.clientService.delete(id);
@@ -110,6 +120,7 @@ export class ClientController {
             description:
                   'Utilize este endpoint para gerar um relatório de empréstimos.',
       })
+      @UseGuards(JwtAuthGuard)
       @Post('/report/all')
       async report(@Body() payload: GenerateReportLoanDto) {
             return await this.clientService.report(payload);
@@ -120,6 +131,7 @@ export class ClientController {
             description:
                   'Utilize este endpoint para gerar um relatório de empréstimos de um cliente.',
       })
+      @UseGuards(JwtAuthGuard)
       @Post('/report/client')
       async reportClient(@Body() payload: GenerateReportLoanClientDto) {
             return await this.clientService.reportClient(payload);
@@ -130,6 +142,7 @@ export class ClientController {
             description:
                   'Utilize este endpoint para listar os nomes dos clientes.',
       })
+      @UseGuards(JwtAuthGuard)
       @Get('/names/all')
       listClientsName() {
             return this.clientService.listAllNames();

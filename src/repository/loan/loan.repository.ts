@@ -3,11 +3,7 @@ import { Pageable } from '../../config/database/pageable.service';
 import { PrismaService } from '../../config/database/prisma.service';
 import ILoanRepository from './loan.repository.contract';
 import { Loan } from '../../entities/loan.entity';
-import { UpdateLoanDto } from 'src/dto/loan/update-loan.dto';
-import { CreatePaymentDto } from 'src/dto/payment/createPayment.dto';
 import { CreateNewDueDto } from 'src/dto/loan/create-new-due.dto';
-import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
-import { generateQueryByFiltersForReport } from 'src/config/database/Queries';
 
 @Injectable()
 export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
@@ -15,12 +11,12 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
             super();
       }
 
-      updateRestLoan(
+      async updateRestLoan(
             id: string,
             rest_loan: number,
             settle: boolean,
       ): Promise<Loan> {
-            return this.repository.loan.update({
+            return await this.repository.loan.update({
                   where: {
                         id,
                   },
@@ -103,10 +99,22 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
                         value_loan: data.value_loan,
                         interest_rate: data.interest_rate,
                         format_instalment: data.format_instalment,
+                        approved: data.approved,
                         rest_loan: data.rest_loan,
                         dueDate: data.dueDate,
                         startDate: data.startDate,
                         clientId,
+                  },
+            });
+      }
+
+      async updateApproved(id: string, approved: boolean): Promise<Loan> {
+            return await this.repository.loan.update({
+                  where: {
+                        id,
+                  },
+                  data: {
+                        approved,
                   },
             });
       }

@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-      IsOptional,
-      IsString,
-      Matches,
-      MaxLength,
-      MinLength,
-} from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 export class CreateUserDTO {
       @ApiProperty()
@@ -15,4 +9,8 @@ export class CreateUserDTO {
       @IsString()
       @ApiProperty()
       login: string;
+
+      @IsBoolean()
+      @ApiProperty()
+      isAdm: boolean;
 }

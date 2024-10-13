@@ -1,7 +1,16 @@
-import { Controller, Get, Body, Param, Delete, Put } from '@nestjs/common';
+import {
+      Controller,
+      Get,
+      Body,
+      Param,
+      Delete,
+      Put,
+      UseGuards,
+} from '@nestjs/common';
 import { AddressService } from '../services/address.service';
 import { UpdateAddressDto } from '../dto/address/update-address.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
 
 @ApiTags('Address')
 @ApiBearerAuth()
@@ -11,9 +20,9 @@ export class AddressController {
 
       @ApiOperation({
             summary: 'Listar Endereços',
-            description:
-                'Utilize este endpointpara listar todos os endereços.',
-        })
+            description: 'Utilize este endpointpara listar todos os endereços.',
+      })
+      @UseGuards(JwtAuthGuard)
       @Get()
       findAll() {
             return this.addressService.findAll();
@@ -22,8 +31,9 @@ export class AddressController {
       @ApiOperation({
             summary: 'Buscar Endereço',
             description:
-                'Utilize este endpoint para buscar um endereço por ID.',
-        })
+                  'Utilize este endpoint para buscar um endereço por ID.',
+      })
+      @UseGuards(JwtAuthGuard)
       @Get(':id')
       findOne(@Param('id') id: string) {
             return this.addressService.findOne(id);
@@ -31,9 +41,9 @@ export class AddressController {
 
       @ApiOperation({
             summary: 'Atualizar Endereço',
-            description:
-                'Utilize este endpoint para atualizar um endereço.',
-        })
+            description: 'Utilize este endpoint para atualizar um endereço.',
+      })
+      @UseGuards(JwtAuthGuard)
       @Put(':clientId')
       update(
             @Param('clientId') clientId: string,
@@ -44,9 +54,9 @@ export class AddressController {
 
       @ApiOperation({
             summary: 'Deletar Endereço',
-            description:
-                'Utilize este endpoint para deletar um endereço.',
-        })
+            description: 'Utilize este endpoint para deletar um endereço.',
+      })
+      @UseGuards(JwtAuthGuard)
       @Delete(':id')
       remove(@Param('id') id: string) {
             return this.addressService.remove(id);

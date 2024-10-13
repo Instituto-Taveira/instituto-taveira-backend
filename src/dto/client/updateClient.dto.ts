@@ -1,6 +1,7 @@
 import { Transform, TransformFnParams } from 'class-transformer';
 import {
       IsArray,
+      IsBoolean,
       IsNotEmpty,
       IsOptional,
       IsString,
@@ -41,4 +42,9 @@ export class UpdateClientDto {
       @IsString()
       @IsOptional()
       observation: string;
+
+      @ApiProperty()
+      @IsBoolean()
+      @IsOptional()
+      approved: boolean;
 }

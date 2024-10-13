@@ -25,9 +25,8 @@ export class AuthController {
 
       @ApiOperation({
             summary: 'Login',
-            description:
-                'Utilize este endpoint para realizar o login.',
-        })
+            description: 'Utilize este endpoint para realizar o login.',
+      })
       @IsPublic()
       @UseGuards(LocalAuthGuard)
       @Post('login')
@@ -41,8 +40,8 @@ export class AuthController {
       @ApiOperation({
             summary: 'Profile',
             description:
-                'Utilize este endpoint para obter o perfil do usuário.',
-        })
+                  'Utilize este endpoint para obter o perfil do usuário.',
+      })
       @UseGuards(JwtAuthGuard)
       @Get('profile')
       getProfile(@Request() req) {
@@ -51,13 +50,11 @@ export class AuthController {
 
       @ApiOperation({
             summary: 'Logout',
-            description:
-                'Utilize este endpoint para realizar o logout.',
-        })
+            description: 'Utilize este endpoint para realizar o logout.',
+      })
       @IsPublic()
       @Post('/verify/token')
       async verify(@Body() payload: UserToken) {
-            console.log(payload);
             return this.authService.decodeJWT(payload.access_token);
       }
 }

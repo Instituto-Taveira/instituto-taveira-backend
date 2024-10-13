@@ -13,6 +13,8 @@ import * as moment from 'moment';
 import { PaymentService } from './payment.service';
 import { UpdatePaymentLoan } from 'src/dto/loan/update-payment.dto';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { AuthService } from './auth.service';
+import { UpdateLoanApproved } from 'src/dto/loan/update-loan-approved.dto';
 
 @Injectable()
 export class LoanService {
@@ -22,9 +24,10 @@ export class LoanService {
             @Inject(forwardRef(() => ClientService))
             private readonly clientService: ClientService,
             private readonly paymentService: PaymentService,
+            private readonly authService: AuthService,
       ) {}
 
-      async create(payload: CreateLoanDto, clientId: string) {
+      async create(payload: CreateLoanDto, clientId: string, token: string) {
             const client = await this.clientService.listById(clientId);
 
             const startDate = new Date(payload.start_date);
@@ -34,11 +37,19 @@ export class LoanService {
             const rest_loan =
                   (payload.value_loan * payload.interest_rate) / 100 +
                   payload.value_loan;
+
+            let approved: boolean = false;
+            const tokenDecoded = await this.authService.decodeJWT(token);
+
+            if (tokenDecoded.isAdm == true) approved = true;
+
+            console.log(approved);
             const loan = new Loan(
                   {
                         value_loan: payload.value_loan,
                         format_instalment: payload.format_instalment,
                         interest_rate: payload.interest_rate,
+                        approved,
                         rest_loan,
                         payment_settled: false,
                         updatedAt: new Date(),
@@ -154,7 +165,34 @@ export class LoanService {
             };
       }
 
-      async updatePartialInstalment(id: string, payload: UpdatePaymentLoan) {
+      async updateLoanApproved(id: string, payload: UpdateLoanApproved) {
+            const loan = await this.loanRepository.findById(id);
+
+            if (!loan)
+                  throw new HttpException(
+                        `Não foi encontrado um empréstimo com o id: ${id}`,
+                        HttpStatus.NOT_FOUND,
+                  );
+
+            if (loan.approved)
+                  throw new HttpException(
+                        `O empréstimo com o id: ${id} já foi aprovado`,
+                        HttpStatus.BAD_REQUEST,
+                  );
+            if (payload.approved == true)
+                  return await this.loanRepository.updateApproved(
+                        loan.id,
+                        payload.approved,
+                  );
+
+            return await this.loanRepository.delete(loan.id);
+      }
+
+      async updatePartialInstalment(
+            id: string,
+            payload: UpdatePaymentLoan,
+            token: string,
+      ) {
             const payment = await this.paymentService.findById(id);
 
             if (!payment)
@@ -184,7 +222,7 @@ export class LoanService {
                   start_date: payment.dueDate,
             };
 
-            await this.create(createNewPayment, payment.loan.clientId);
+            await this.create(createNewPayment, payment.loan.clientId, token);
 
             return {
                   message: 'Instalment updated',

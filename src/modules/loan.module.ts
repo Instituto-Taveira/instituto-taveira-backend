@@ -5,9 +5,10 @@ import { PrismaService } from '../config/database/prisma.service';
 import { ClientModule } from './client.module';
 import { LoanRepository } from 'src/repository/loan/loan.repository';
 import { PaymentModule } from './payment.module';
+import { AuthModule } from './auth.module';
 
 @Module({
-      imports: [forwardRef(() => ClientModule), PaymentModule],
+      imports: [forwardRef(() => ClientModule), PaymentModule, AuthModule],
       providers: [
             LoanService,
             {

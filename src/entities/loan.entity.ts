@@ -15,6 +15,7 @@ export class Loan {
       format_instalment: EFormatInstalment;
       startDate: Date;
       dueDate: Date;
+      approved: boolean;
       payment?: Payment[];
       payment_settled?: boolean;
       clientId?: string;

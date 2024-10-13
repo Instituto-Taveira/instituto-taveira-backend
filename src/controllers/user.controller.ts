@@ -1,10 +1,12 @@
 import {
       Body,
       Controller,
+      Delete,
       Get,
       HttpCode,
       HttpStatus,
       Param,
+      Patch,
       Post,
       UseGuards,
 } from '@nestjs/common';
@@ -22,11 +24,10 @@ export class UserController {
 
       @ApiOperation({
             summary: 'Criar Usuário',
-            description:
-                  'Utilize este endpoint para criar um novo usuário.',
+            description: 'Utilize este endpoint para criar um novo usuário.',
       })
-      @IsPublic()
       @Post()
+      @UseGuards(JwtAuthGuard)
       @HttpCode(HttpStatus.CREATED)
       create(@Body() payload: CreateUserDTO): Promise<User> {
             return this.userService.create(payload);
@@ -52,5 +53,31 @@ export class UserController {
       @UseGuards(JwtAuthGuard)
       findAll() {
             return this.userService.findAll();
+      }
+
+      @ApiOperation({
+            summary: 'Atualizar Usuário',
+            description:
+                  'Utilize este endpoint para atualizar um usuário cadastrado.',
+      })
+      @Patch(':id')
+      @UseGuards(JwtAuthGuard)
+      async update(@Param('id') id: string, @Body() payload: CreateUserDTO) {
+            await this.userService.update(id, payload);
+
+            return { message: 'Usuário atualizado com sucesso!' };
+      }
+
+      @ApiOperation({
+            summary: 'Deletar Usuário',
+            description:
+                  'Utilize este endpoint para deletar um usuário cadastrado.',
+      })
+      @Delete(':id')
+      @UseGuards(JwtAuthGuard)
+      async delete(@Param('id') id: string) {
+            await this.userService.delete(id);
+
+            return { message: 'Usuário deletado com sucesso!' };
       }
 }
