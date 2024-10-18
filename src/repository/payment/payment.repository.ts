@@ -3,6 +3,7 @@ import { PrismaService } from 'src/config/database/prisma.service';
 import { Payment } from 'src/entities/payment.entity';
 import IPaymentRepository from './payment.repository.contract';
 import { UpdatePaymentLoan } from 'src/dto/loan/update-payment.dto';
+import { Loan } from 'src/entities/loan.entity';
 
 @Injectable()
 export class PaymentRepository implements IPaymentRepository {

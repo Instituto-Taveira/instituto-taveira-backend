@@ -15,6 +15,7 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
             id: string,
             rest_loan: number,
             settle: boolean,
+            only_pay_interest: boolean,
       ): Promise<Loan> {
             return await this.repository.loan.update({
                   where: {
@@ -23,6 +24,7 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
                   data: {
                         rest_loan,
                         payment_settled: settle,
+                        only_pay_interest,
                   },
             });
       }
@@ -72,10 +74,13 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
                   },
             });
       }
-      findById(id: string): Promise<Loan> {
+      findById(id: string): Promise<any> {
             return this.repository.loan.findUnique({
                   where: {
                         id,
+                  },
+                  include: {
+                        payment: true,
                   },
             });
       }

@@ -135,7 +135,7 @@ export class ClientRepository
                                     },
                               },
                               orderBy: {
-                                    payment_settled: 'asc',
+                                    createdAt: 'desc',
                               },
                         },
                   },
@@ -379,6 +379,7 @@ export class ClientRepository
                                           value_loan: loan.value_loan,
                                           interest_rate: loan.interest_rate,
                                           approved: loan.approved,
+                                          only_pay_interest: false,
                                           format_instalment:
                                                 loan.format_instalment,
                                           rest_loan: loan.rest_loan,

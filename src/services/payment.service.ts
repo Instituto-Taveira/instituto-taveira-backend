@@ -32,6 +32,6 @@ export class PaymentService {
       }
 
       async updateInstalment(id: string, payload: UpdatePaymentLoan) {
-            return this.repository.updateInstalment(id, payload);
+            return await this.repository.updateInstalment(id, payload);
       }
 }

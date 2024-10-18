@@ -16,6 +16,7 @@ export class Loan {
       startDate: Date;
       dueDate: Date;
       approved: boolean;
+      only_pay_interest: boolean;
       payment?: Payment[];
       payment_settled?: boolean;
       clientId?: string;

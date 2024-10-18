@@ -18,6 +18,7 @@ import { LoanService } from './loan.service';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
 import { AuthService } from './auth.service';
+import { Console } from 'console';
 
 @Injectable()
 export class ClientService {
@@ -432,28 +433,40 @@ export class ClientService {
             const client = await this.clientRepository.generateReportClient({
                   name: payload.name,
             });
+
             if (!client) {
                   throw new HttpException(
                         'Cliente não encontrado!',
                         HttpStatus.NOT_FOUND,
                   );
             }
+
             let valueLoaned = 0;
             let valueToPay = 0;
+            let valueInterestOnly = 0;
 
-            const loans = client.loan.reduce((acc, curr) => {
-                  valueLoaned += curr.value_loan;
-                  valueToPay +=
-                        (curr.value_loan * curr.interest_rate) / 100 +
-                        curr.value_loan;
-                  return acc;
-            }, []);
+            const loans = client.loan.map((loan) => {
+                  valueLoaned += loan.value_loan;
+
+                  if (loan.only_pay_interest) {
+                        valueInterestOnly += loan.payment[0].valuePaid;
+
+                        valueToPay += loan.payment[0].valuePaid;
+                  } else {
+                        valueToPay +=
+                              (loan.value_loan * loan.interest_rate) / 100 +
+                              loan.value_loan;
+                  }
+
+                  return loan;
+            });
 
             return {
                   name: client.name,
                   attendant: client.attendant,
                   valueLoaned,
                   valueToPay,
+                  valueInterestOnly,
                   loans: client.loan,
             };
       }

@@ -15,6 +15,7 @@ export default interface ILoanRepository {
             id: string,
             rest_loan: number,
             settle: boolean,
+            only_pay_interest: boolean,
       ): Promise<Loan>;
       updateInstalment(id: string, data: CreateNewDueDto): Promise<Loan>;
       updateApproved(id: string, approved: boolean): Promise<Loan>;

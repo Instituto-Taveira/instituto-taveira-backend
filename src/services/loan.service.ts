@@ -51,6 +51,7 @@ export class LoanService {
                         interest_rate: payload.interest_rate,
                         approved,
                         rest_loan,
+                        only_pay_interest: false,
                         payment_settled: false,
                         updatedAt: new Date(),
                   },
@@ -153,11 +154,24 @@ export class LoanService {
                   );
 
             await this.paymentService.updateInstalment(payment.id, payload);
+            const loanUpdated = await this.loanRepository.findById(
+                  payment.loanId,
+            );
+            console.log(loanUpdated);
+
+            const isAllPaid = loanUpdated.payment.every(
+                  (payment) => payment.settled,
+            );
+
+            console.log(isAllPaid);
+
             const rest_loan = payment.loan.rest_loan - payload.valuePaid;
+
             const loan = await this.loanRepository.updateRestLoan(
                   payment.loanId,
-                  rest_loan,
-                  rest_loan === 0,
+                  isAllPaid ? 0 : rest_loan,
+                  isAllPaid,
+                  false,
             );
 
             return {
@@ -213,7 +227,17 @@ export class LoanService {
 
             await this.paymentService.updateInstalment(payment.id, payload);
             const rest_loan = payment.loan.rest_loan - payload.valuePaid;
-            await this.loanRepository.updateRestLoan(payment.loanId, 0, true);
+            await this.loanRepository.updateRestLoan(
+                  payment.loanId,
+                  rest_loan,
+                  true,
+                  true,
+            );
+
+            if (payload.valuePaid == payment.value)
+                  return {
+                        message: 'Instalment updated',
+                  };
 
             const createNewPayment: CreateLoanDto = {
                   value_loan: rest_loan,
