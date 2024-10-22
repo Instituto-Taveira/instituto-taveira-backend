@@ -130,12 +130,12 @@ export class ClientRepository
                                                 iterestDelay: true,
                                           },
                                           orderBy: {
-                                                settled: 'asc',
+                                                dueDate: 'asc',
                                           },
                                     },
                               },
                               orderBy: {
-                                    createdAt: 'desc',
+                                    payment_settled: 'asc',
                               },
                         },
                   },
