@@ -130,7 +130,7 @@ export class ClientRepository
                                                 iterestDelay: true,
                                           },
                                           orderBy: {
-                                                dueDate: 'asc',
+                                                settled: 'asc',
                                           },
                                     },
                               },
