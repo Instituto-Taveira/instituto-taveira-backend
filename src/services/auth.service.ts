@@ -26,7 +26,42 @@ export class AuthService {
                   id: user.id,
                   name: user.name,
                   isAdm: user.isAdm,
+                  firstLogin: user.firstLogin,
             };
+
+            if (user.isBlocked) {
+                  throw new HttpException(
+                        'Usuário bloqueado!',
+                        HttpStatus.FORBIDDEN,
+                  );
+            }
+
+            return {
+                  ...payload,
+                  access_token: this.jwtService.sign(payload),
+            };
+      }
+
+      async updateUserPassword(password: string, token: string): Promise<any> {
+            const decodedToken = await this.decodeJWT(token);
+            const user = await this.userService.findOne(decodedToken.login);
+            if (!user) {
+                  throw new HttpException('Usuário não encontrado!', 404);
+            }
+
+            const userUpdated = await this.userService.updateUserPassword(
+                  user.id,
+                  password,
+            );
+
+            const payload: UserPayload = {
+                  login: userUpdated.login,
+                  id: userUpdated.id,
+                  name: userUpdated.name,
+                  isAdm: userUpdated.isAdm,
+                  firstLogin: userUpdated.firstLogin,
+            };
+
             return {
                   ...payload,
                   access_token: this.jwtService.sign(payload),

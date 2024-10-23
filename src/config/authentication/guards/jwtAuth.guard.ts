@@ -35,7 +35,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
                         throw new UnauthorizedException(error.message);
                   }
 
-                  throw new UnauthorizedException('complicated');
+                  throw new UnauthorizedException(
+                        'Token expirado ou inválido, faça login de novo.',
+                  );
             });
       }
 }

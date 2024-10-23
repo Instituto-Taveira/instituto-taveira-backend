@@ -7,6 +7,7 @@ export class User {
       password: string;
       isBlocked: boolean;
       isAdm: boolean;
+      firstLogin: boolean;
       createdAt: Date;
       updatedAt?: Date | null;
 

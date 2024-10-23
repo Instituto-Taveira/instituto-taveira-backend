@@ -43,7 +43,6 @@ export class LoanService {
 
             if (tokenDecoded.isAdm == true) approved = true;
 
-            console.log(approved);
             const loan = new Loan(
                   {
                         value_loan: payload.value_loan,
@@ -157,13 +156,10 @@ export class LoanService {
             const loanUpdated = await this.loanRepository.findById(
                   payment.loanId,
             );
-            console.log(loanUpdated);
 
             const isAllPaid = loanUpdated.payment.every(
                   (payment) => payment.settled,
             );
-
-            console.log(isAllPaid);
 
             const rest_loan = payment.loan.rest_loan - payload.valuePaid;
 

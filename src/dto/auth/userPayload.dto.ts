@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UserPayload {
       @ApiProperty()
@@ -9,4 +9,6 @@ export class UserPayload {
       name: string;
       @ApiProperty()
       isAdm: boolean;
+      @ApiProperty()
+      firstLogin: boolean;
 }

@@ -8,12 +8,14 @@ import {
       Param,
       Patch,
       Post,
+      Headers,
       UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { CreateUserDTO } from 'src/dto/user/createUser.dto';
+import { UpdatePasswordUserDTO } from 'src/dto/user/updatePasswordUser.dto';
 import { User } from 'src/entities/user.entity';
 import { UserService } from 'src/services/user.service';
 

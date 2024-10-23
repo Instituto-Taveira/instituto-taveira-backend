@@ -8,4 +8,5 @@ export default interface IUserRepository {
       findById(id: string): Promise<User>;
       update(id: string, data: CreateUserDTO): Promise<User>;
       delete(id: string): Promise<void>;
+      updatePassword(id: string, password: string): Promise<User>;
 }

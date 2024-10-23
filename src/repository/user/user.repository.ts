@@ -57,4 +57,14 @@ export class UserRepository implements IUserRepository {
                   where: { id },
             });
       }
+
+      async updatePassword(id: string, password: string): Promise<User> {
+            return await this.repository.user.update({
+                  where: { id },
+                  data: {
+                        password,
+                        firstLogin: false,
+                  },
+            });
+      }
 }

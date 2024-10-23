@@ -1,13 +1,16 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, HttpException, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDTO } from 'src/dto/user/createUser.dto';
 import { User } from 'src/entities/user.entity';
 import IUserRepository from 'src/repository/user/user.repository.contract';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class UserService {
       constructor(
             @Inject('IUserRepository')
             private readonly userRepository: IUserRepository,
+            @Inject(forwardRef(() => AuthService))
+            private readonly authService: AuthService,
       ) {}
 
       async create(data: CreateUserDTO): Promise<User> {
@@ -26,6 +29,7 @@ export class UserService {
                   isAdm: data.isAdm,
                   isBlocked: false,
                   updatedAt: new Date(),
+                  firstLogin: true,
                   password: '123456',
             });
             return await this.userRepository.create(user);
@@ -70,5 +74,9 @@ export class UserService {
             await this.userRepository.delete(id);
 
             return;
+      }
+
+      async updateUserPassword(id: string, password: string): Promise<User> {
+            return await this.userRepository.updatePassword(id, password);
       }
 }
