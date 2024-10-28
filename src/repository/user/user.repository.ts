@@ -15,6 +15,7 @@ export class UserRepository implements IUserRepository {
                         name: data.name,
                         login: data.login,
                         password: data.password,
+                        firstLogin: data.firstLogin,
                         isBlocked: data.isBlocked,
                         isAdm: data.isAdm,
                   },
