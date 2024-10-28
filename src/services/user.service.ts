@@ -3,6 +3,7 @@ import { CreateUserDTO } from 'src/dto/user/createUser.dto';
 import { User } from 'src/entities/user.entity';
 import IUserRepository from 'src/repository/user/user.repository.contract';
 import { AuthService } from './auth.service';
+import { UpdatePasswordUserDTO } from 'src/dto/user/updatePasswordUser.dto';
 
 @Injectable()
 export class UserService {
@@ -64,6 +65,18 @@ export class UserService {
             return;
       }
 
+      async resetUserPassword(id: string): Promise<void> {
+            const user = await this.userRepository.findById(id);
+
+            if (!user) {
+                  throw new HttpException('Usuário não encontrado!', 404);
+            }
+
+            await this.userRepository.updatePassword(id, '123456', true);
+
+            return;
+      }
+
       async delete(id: string): Promise<void> {
             const user = await this.userRepository.findById(id);
 
@@ -77,6 +90,10 @@ export class UserService {
       }
 
       async updateUserPassword(id: string, password: string): Promise<User> {
-            return await this.userRepository.updatePassword(id, password);
+            return await this.userRepository.updatePassword(
+                  id,
+                  password,
+                  false,
+            );
       }
 }

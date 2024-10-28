@@ -71,6 +71,19 @@ export class UserController {
       }
 
       @ApiOperation({
+            summary: 'Atualizar senha padrão do usuário',
+            description:
+                  'Utilize este endpoint para atualizar a senha padrão do usuário.',
+      })
+      @Patch('/update-password/:id')
+      @UseGuards(JwtAuthGuard)
+      async updatePassword(@Param('id') id: string) {
+            await this.userService.resetUserPassword(id);
+
+            return { message: 'Usuário atualizado com sucesso!' };
+      }
+
+      @ApiOperation({
             summary: 'Deletar Usuário',
             description:
                   'Utilize este endpoint para deletar um usuário cadastrado.',
