@@ -19,6 +19,7 @@ import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
 import { AuthService } from './auth.service';
 import { Console } from 'console';
+import { GenerateReportInstalmentClosedDto } from 'src/dto/loan/generate-report-instalment-closed.dto';
 
 @Injectable()
 export class ClientService {
@@ -468,6 +469,30 @@ export class ClientService {
                   valueToPay,
                   valueInterestOnly,
                   loans: client.loan,
+            };
+      }
+
+      async reportClosed(payload: GenerateReportInstalmentClosedDto) {
+            const payments = await this.clientRepository.findAllPaymentClosed(
+                  payload.dueDate,
+            );
+            const totalValuePaid = payments.reduce(
+                  (acc, curr) => acc + curr.valuePaid,
+                  0,
+            );
+            return {
+                  total: payments.length,
+                  totalValuePaid,
+                  data: payload.dueDate,
+                  payments: payments.map((payment) => ({
+                        id: payment.id,
+                        valuePaid: payment.valuePaid,
+                        dueDate: payment.dueDate,
+                        value_loan: payment.loan.value_loan,
+                        value_start_date: payment.loan.startDate,
+                        client_name: payment.loan.client.name,
+                        updated_at: payment.updatedAt,
+                  })),
             };
       }
 

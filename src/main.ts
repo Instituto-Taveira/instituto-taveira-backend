@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
       const app = await NestFactory.create(AppModule);
@@ -12,14 +13,20 @@ async function bootstrap() {
             .addTag('Auth', 'Métodos para autenticação de usuários')
             .addTag('User', 'Métodos para o gerenciamento de usuarios')
             .addTag('Client', 'Métodos para o gerenciamento de clientes')
-            .addTag('Loan', 'Métodos para o gerenciamento de pagamento de empréstimos')
+            .addTag(
+                  'Loan',
+                  'Métodos para o gerenciamento de pagamento de empréstimos',
+            )
             .addTag('Address', 'Métodos para o gerenciamento de endereços')
-            .addTag("IterestDelay", 'Métodos para o gerenciamento de Juros Mora.')
+            .addTag(
+                  'IterestDelay',
+                  'Métodos para o gerenciamento de Juros Mora.',
+            )
             .addBearerAuth({
                   type: 'http',
                   scheme: 'bearer',
                   bearerFormat: 'JWT',
-                })
+            })
             .build();
 
       const document = SwaggerModule.createDocument(app, config);
@@ -35,9 +42,10 @@ async function bootstrap() {
       });
 
       await app.listen(process.env.PORT, () => {
-            console.log(`🤖 server running on port ${process.env.PORT}...`,);
-            console.log(`🚀 Swagger running on http://localhost:${process.env.PORT}/swagger`);
-      }
-      );
+            console.log(`🤖 server running on port ${process.env.PORT}...`);
+            console.log(
+                  `🚀 Swagger running on http://localhost:${process.env.PORT}/swagger`,
+            );
+      });
 }
 bootstrap();

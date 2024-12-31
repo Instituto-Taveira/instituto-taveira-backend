@@ -4,11 +4,13 @@ import { Client } from '../../entities/client.entity';
 import { UpdateClientDto } from 'src/dto/client/updateClient.dto';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
+import { Payment } from 'src/entities/payment.entity';
 
 export default interface IClientRepository {
       create(data: Client): Promise<Client>;
       delete(id: string): Promise<Client>;
       findAll(page: Page, filters?: FiltersClientDTO): Promise<any>;
+      findAllPaymentClosed(dueDate: Date): Promise<any[]>;
       findAllPaymentTrue(
             page: Page,
             filters?: FiltersClientDTO,

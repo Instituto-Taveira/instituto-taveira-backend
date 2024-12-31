@@ -20,6 +20,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/config/authentication/guards/jwtAuth.guard';
 import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
 import { GenerateReportLoanClientDto } from 'src/dto/loan/generate-report-loan-client.dto';
+import { GenerateReportInstalmentClosedDto } from 'src/dto/loan/generate-report-instalment-closed.dto';
 
 @ApiTags('Client')
 @ApiBearerAuth()
@@ -135,6 +136,17 @@ export class ClientController {
       @Post('/report/client')
       async reportClient(@Body() payload: GenerateReportLoanClientDto) {
             return await this.clientService.reportClient(payload);
+      }
+
+      @ApiOperation({
+            summary: 'Gerar relatório parcelas fechadas no dia',
+            description:
+                  'Utilize este endpoint para gerar um relatório de parcelas fechadas no dia',
+      })
+      @UseGuards(JwtAuthGuard)
+      @Post('/report/closed')
+      async reportClosed(@Body() payload: GenerateReportInstalmentClosedDto) {
+            return await this.clientService.reportClosed(payload);
       }
 
       @ApiOperation({

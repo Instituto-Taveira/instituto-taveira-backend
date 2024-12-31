@@ -56,6 +56,37 @@ export class ClientRepository
             });
       }
 
+      async findAllPaymentClosed(dueDate: Date): Promise<any> {
+            const startOfDay = new Date(dueDate);
+            startOfDay.setUTCHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(dueDate);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+
+            console.log(startOfDay, endOfDay);
+
+            const payment = await this.repository.payment.findMany({
+                  where: {
+                        updatedAt: {
+                              gte: startOfDay,
+                              lte: endOfDay,
+                        },
+                  },
+                  orderBy: {
+                        updatedAt: 'asc',
+                  },
+                  include: {
+                        loan: {
+                              include: {
+                                    client: true,
+                              },
+                        },
+                  },
+            });
+
+            return payment;
+      }
+
       async findAll(page: Page, filters?: FiltersClientDTO): Promise<any> {
             const condition = generateQueryByFiltersForClient(filters);
             const items: any = condition
