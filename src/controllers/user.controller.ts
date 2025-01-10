@@ -95,4 +95,15 @@ export class UserController {
 
             return { message: 'Usuário deletado com sucesso!' };
       }
+
+      @ApiOperation({
+            summary: 'Listar todos os atendentes',
+            description:
+                  'Utilize este endpoint para listar todos os atendentes cadastrados.',
+      })
+      @Get('/attendants/list')
+      @UseGuards(JwtAuthGuard)
+      async findAllAttendants() {
+            return await this.userService.findAllAttendants();
+      }
 }

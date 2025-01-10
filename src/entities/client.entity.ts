@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { Address } from './address.entity';
 import { Loan } from './loan.entity';
+import { User } from './user.entity';
 
 export class Client {
       id: string;
@@ -8,6 +9,7 @@ export class Client {
       fone: string;
       address: Address;
       attendant?: string;
+      attendantUser?: User;
       observation?: string;
       approved: boolean;
       loan: Loan[];

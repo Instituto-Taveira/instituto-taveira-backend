@@ -98,6 +98,7 @@ export class ClientRepository
                           },
                           include: {
                                 address: true,
+                                attendantUser: true,
                                 loan: {
                                       include: {
                                             payment: {
@@ -120,6 +121,7 @@ export class ClientRepository
                           },
                           include: {
                                 address: true,
+                                attendantUser: true,
                                 loan: {
                                       include: {
                                             payment: {
@@ -142,7 +144,6 @@ export class ClientRepository
                           },
                     })
                   : await this.repository.client.count();
-
             return this.buildPageResponse(
                   items,
                   Array.isArray(total) ? total.length : total,
@@ -391,7 +392,11 @@ export class ClientRepository
                         id: data.id,
                         name: data.name,
                         fone: data.fone,
-                        attendant: data.attendant,
+                        attendantUser: {
+                              connect: {
+                                    id: data.attendant,
+                              },
+                        },
                         approved: data.approved,
                         observation: data.observation,
                         address: {
@@ -436,15 +441,33 @@ export class ClientRepository
             });
       }
 
-      update(id: string, data: UpdateClientDto): Promise<Client | null> {
-            return this.repository.client.update({
+      async update(id: string, data: UpdateClientDto): Promise<Client | null> {
+            const attendant = await this.repository.user.findFirst({
+                  where: {
+                        name: {
+                              contains: data.attendant,
+                              mode: 'insensitive',
+                        },
+                  },
+            });
+
+            if (!attendant) {
+                  throw new Error('Atendente não encontrado');
+            }
+
+            return await this.repository.client.update({
                   where: {
                         id,
                   },
                   data: {
                         name: data.name,
                         fone: data.fone,
-                        attendant: data.attendant,
+                        attendant: attendant.name,
+                        attendantUser: {
+                              connect: {
+                                    id: attendant.id,
+                              },
+                        },
                         approved: data.approved,
                         observation: data.observation,
                         address: {

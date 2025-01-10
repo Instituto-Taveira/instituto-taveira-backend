@@ -28,8 +28,18 @@ export class UserRepository implements IUserRepository {
             });
       }
 
-      async findAll(): Promise<User[]> {
+      async findAll(): Promise<Partial<User>[]> {
             return await this.repository.user.findMany({
+                  select: {
+                        id: true,
+                        name: true,
+                        firstLogin: true,
+                        isAdm: true,
+                        isBlocked: true,
+                        login: true,
+                        createdAt: true,
+                        updatedAt: true,
+                  },
                   orderBy: {
                         isAdm: 'desc',
                   },
@@ -70,6 +80,18 @@ export class UserRepository implements IUserRepository {
                         password,
                         firstLogin,
                         updatedAt: new Date(),
+                  },
+            });
+      }
+
+      async findAllAttendants(): Promise<Partial<User>[]> {
+            return await this.repository.user.findMany({
+                  where: {
+                        isAdm: false,
+                  },
+                  select: {
+                        id: true,
+                        name: true,
                   },
             });
       }

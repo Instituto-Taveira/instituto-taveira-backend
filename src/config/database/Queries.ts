@@ -11,9 +11,11 @@ export function generateQueryByFiltersForClient(
                   name: { contains: filters.name, mode: 'insensitive' },
             }),
             attendant: () => ({
-                  attendant: {
-                        contains: filters.attendant,
-                        mode: 'insensitive',
+                  attendantUser: {
+                        name: {
+                              contains: filters.attendant,
+                              mode: 'insensitive',
+                        },
                   },
             }),
             initialDate: () => ({
@@ -74,9 +76,11 @@ export function generateQueryByFiltersForReport(
 ): IQueryClient {
       const fields = {
             attendant: () => ({
-                  attendant: {
-                        contains: filters.attendant,
-                        mode: 'insensitive',
+                  attendantUser: {
+                        name: {
+                              contains: filters.attendant,
+                              mode: 'insensitive',
+                        },
                   },
             }),
             initialDate: () => ({

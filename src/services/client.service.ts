@@ -566,7 +566,7 @@ export class ClientService {
                         name: client.name,
                         fone: client.fone,
                         address: client.address,
-                        attendant: client.attendant ?? '',
+                        attendant: client.attendantUser?.name ?? '',
                         observation: client.observation ?? '',
                         approved: client.approved,
                         hasLoanToApprove,

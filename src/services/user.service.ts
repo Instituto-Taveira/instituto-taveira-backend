@@ -40,7 +40,7 @@ export class UserService {
             return await this.userRepository.findByLogin(login);
       }
 
-      async findAll(): Promise<User[]> {
+      async findAll(): Promise<Partial<User>[]> {
             return await this.userRepository.findAll();
       }
 
@@ -95,5 +95,9 @@ export class UserService {
                   password,
                   false,
             );
+      }
+
+      async findAllAttendants(): Promise<Partial<User>[]> {
+            return await this.userRepository.findAllAttendants();
       }
 }

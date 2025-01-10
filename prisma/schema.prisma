@@ -17,19 +17,22 @@ model User {
   firstLogin Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime?
+  Client     Client[]
 }
 
 model Client {
-  id          String    @id @unique
-  name        String
-  fone        String
-  attendant   String?
-  observation String?
-  approved    Boolean   @default(true)
-  address     Address?
-  loan        Loan[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime?
+  id            String    @id @unique
+  name          String
+  fone          String
+  attendant     String?
+  attendantId   String?
+  attendantUser User?     @relation(fields: [attendantId], references: [id])
+  observation   String?
+  approved      Boolean   @default(true)
+  address       Address?
+  loan          Loan[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
 }
 
 model Address {
