@@ -386,15 +386,24 @@ export class ClientRepository
             return query;
       }
 
-      create(data: Client): Promise<any> {
+      async create(data: Client): Promise<any> {
+            const attendant = await this.repository.user.findFirst({
+                  where: {
+                        name: {
+                              contains: data.attendant,
+                              mode: 'insensitive',
+                        },
+                  },
+            });
             return this.repository.client.create({
                   data: {
                         id: data.id,
                         name: data.name,
                         fone: data.fone,
+                        attendant: attendant.name,
                         attendantUser: {
                               connect: {
-                                    id: data.attendant,
+                                    id: attendant.id,
                               },
                         },
                         approved: data.approved,
