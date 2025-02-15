@@ -66,6 +66,7 @@ export class ClientController {
             @Query() filters: FiltersClientDTO,
             @Headers('authorization') token: string,
       ): Promise<PageResponse<MappedClientDTO>> {
+            console.log(filters);
             return await this.clientService.listAll(page, token, filters);
       }
 

@@ -88,7 +88,40 @@ export class ClientRepository
       }
 
       async findAll(page: Page, filters?: FiltersClientDTO): Promise<any> {
-            const condition = generateQueryByFiltersForClient(filters);
+            if (filters && filters.dueDate) {
+                  const { clientNames, totalCount } =
+                        await this.findAllByDueDay(page, filters.dueDate);
+
+                  const items: any = await this.repository.client.findMany({
+                        ...this.buildPage(page),
+                        where: {
+                              name: { in: clientNames },
+                        },
+                        orderBy: {
+                              approved: 'asc',
+                        },
+                        include: {
+                              address: true,
+                              attendantUser: true,
+                              loan: {
+                                    include: {
+                                          payment: {
+                                                include: {
+                                                      iterestDelay: true,
+                                                },
+                                                orderBy: {
+                                                      dueDate: 'asc',
+                                                },
+                                          },
+                                    },
+                              },
+                        },
+                  });
+                  return this.buildPageResponse(items, totalCount);
+            }
+            const condition: any = generateQueryByFiltersForClient(filters);
+            console.log(JSON.stringify(condition, null, 2));
+
             const items: any = condition
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),
@@ -115,7 +148,6 @@ export class ClientRepository
                     })
                   : await this.repository.client.findMany({
                           ...this.buildPage(page),
-
                           orderBy: {
                                 createdAt: 'desc',
                           },
@@ -144,11 +176,42 @@ export class ClientRepository
                           },
                     })
                   : await this.repository.client.count();
+            console.log(items);
             return this.buildPageResponse(
                   items,
                   Array.isArray(total) ? total.length : total,
             );
       }
+
+      async findAllByDueDay(page: Page, day: string): Promise<any> {
+            const results: any = await this.repository.$queryRaw`
+                SELECT "Client"."name" AS client_name
+                FROM "Loan"
+                INNER JOIN "Payment" ON "Payment"."loanId" = "Loan"."id"
+                INNER JOIN "Client" ON "Client"."id" = "Loan"."clientId"
+                WHERE "Payment"."settled" = false
+                AND EXTRACT(DAY FROM "Payment"."dueDate") = ${+day}
+                LIMIT ${page.take} OFFSET ${page.skip}
+            `;
+
+            console.log(results);
+
+            const clientNames = results.map((result) => result.client_name);
+
+            const totalResults = await this.repository.$queryRaw`
+                SELECT COUNT(*)
+                FROM "Loan"
+                INNER JOIN "Payment" ON "Payment"."loanId" = "Loan"."id"
+                INNER JOIN "Client" ON "Client"."id" = "Loan"."clientId"
+                WHERE "Payment"."settled" = false
+                AND EXTRACT(DAY FROM "Payment"."dueDate") = ${+day}
+            `;
+
+            const totalCount = totalResults[0].count;
+
+            return { clientNames, totalCount };
+      }
+
       findById(id: string): Promise<any> {
             return this.repository.client.findUnique({
                   where: { id },

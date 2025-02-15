@@ -35,4 +35,8 @@ export class FiltersClientDTO {
       @ApiProperty()
       @IsOptional()
       loan?: Loan[];
+
+      @ApiProperty()
+      @IsOptional()
+      dueDate?: string;
 }
