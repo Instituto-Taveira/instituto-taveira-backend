@@ -63,8 +63,6 @@ export class ClientRepository
             const endOfDay = new Date(dueDate);
             endOfDay.setUTCHours(23, 59, 59, 999);
 
-            console.log(startOfDay, endOfDay);
-
             const payment = await this.repository.payment.findMany({
                   where: {
                         updatedAt: {
@@ -120,7 +118,6 @@ export class ClientRepository
                   return this.buildPageResponse(items, totalCount);
             }
             const condition: any = generateQueryByFiltersForClient(filters);
-            console.log(JSON.stringify(condition, null, 2));
 
             const items: any = condition
                   ? await this.repository.client.findMany({
@@ -176,7 +173,6 @@ export class ClientRepository
                           },
                     })
                   : await this.repository.client.count();
-            console.log(items);
             return this.buildPageResponse(
                   items,
                   Array.isArray(total) ? total.length : total,
@@ -185,29 +181,32 @@ export class ClientRepository
 
       async findAllByDueDay(page: Page, day: string): Promise<any> {
             const results: any = await this.repository.$queryRaw`
-                SELECT "Client"."name" AS client_name
+                SELECT 
+                    "Client"."name" AS client_name, 
+                    "Payment"."dueDate"
                 FROM "Loan"
                 INNER JOIN "Payment" ON "Payment"."loanId" = "Loan"."id"
                 INNER JOIN "Client" ON "Client"."id" = "Loan"."clientId"
                 WHERE "Payment"."settled" = false
-                AND EXTRACT(DAY FROM "Payment"."dueDate") = ${+day}
-                LIMIT ${page.take} OFFSET ${page.skip}
+                AND EXTRACT(DAY FROM "Payment"."dueDate") = ${Number(day)}
+                AND EXTRACT(MONTH FROM "Payment"."dueDate") <= EXTRACT(MONTH FROM CURRENT_DATE)
+                AND EXTRACT(YEAR FROM "Payment"."dueDate") <= EXTRACT(YEAR FROM CURRENT_DATE)
+                ORDER BY "Payment"."dueDate" DESC
+                LIMIT ${Number(page.take)} OFFSET ${Number(page.skip)}
             `;
-
-            console.log(results);
 
             const clientNames = results.map((result) => result.client_name);
 
             const totalResults = await this.repository.$queryRaw`
-                SELECT COUNT(*)
+                SELECT COUNT(*) AS total_count
                 FROM "Loan"
                 INNER JOIN "Payment" ON "Payment"."loanId" = "Loan"."id"
                 INNER JOIN "Client" ON "Client"."id" = "Loan"."clientId"
                 WHERE "Payment"."settled" = false
-                AND EXTRACT(DAY FROM "Payment"."dueDate") = ${+day}
+                AND EXTRACT(DAY FROM "Payment"."dueDate") = ${Number(day)}
             `;
 
-            const totalCount = totalResults[0].count;
+            const totalCount = totalResults[0]?.total_count ?? 0;
 
             return { clientNames, totalCount };
       }
