@@ -15,6 +15,7 @@ export class Client {
       loan: Loan[];
       createdAt?: Date;
       updatedAt?: Date | null;
+      deletedAt?: Date | null;
 
       constructor(
             props: Omit<

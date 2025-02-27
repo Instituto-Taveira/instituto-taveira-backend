@@ -36,7 +36,7 @@ export class ClientService {
 
             if (tokenDecoded.isAdm == false)
                   props.attendant = tokenDecoded.name;
-
+            console.log(props);
             const address = new Address(props.address);
             const client = new Client(
                   { ...props },
@@ -138,6 +138,8 @@ export class ClientService {
 
             if (tokenDecoded.isAdm == false)
                   filters.attendant = tokenDecoded.name;
+
+            if (tokenDecoded.role == 'vendor') delete filters.attendant;
             const clients = await this.clientRepository.findAll(page, filters);
 
             if (clients.total === 0) {
@@ -504,14 +506,19 @@ export class ClientService {
                   let total = 0;
                   let pagar = 0;
                   let hasLoanToApprove = 'Não tem';
+                  let loanToApproveDate = null;
                   client.loan.forEach((item) => {
                         total = total + item.value_loan;
                   });
 
                   client.loan.forEach((loan) => {
                         if (loan.payment_settled === false) loanOpen = 'Sim';
-                        if (!loan.approved)
+                        if (!loan.approved) {
                               hasLoanToApprove = 'Pendente Aprovação';
+                              loanToApproveDate = moment
+                                    .utc(loan.startDate)
+                                    .format('DD/MM/YYYY');
+                        }
 
                         pagar = (total * loan.interest_rate) / 100 + total;
 
@@ -570,6 +577,7 @@ export class ClientService {
                         observation: client.observation ?? '',
                         approved: client.approved,
                         hasLoanToApprove,
+                        loanToApproveDate,
                         loanOpen,
                         status,
                         nextPayment: nextPayment

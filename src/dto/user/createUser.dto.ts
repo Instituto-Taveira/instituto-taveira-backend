@@ -10,7 +10,7 @@ export class CreateUserDTO {
       @ApiProperty()
       login: string;
 
-      @IsBoolean()
+      @IsString()
       @ApiProperty()
-      isAdm: boolean;
+      role: string;
 }

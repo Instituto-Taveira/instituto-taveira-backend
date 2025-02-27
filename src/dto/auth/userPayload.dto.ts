@@ -10,5 +10,7 @@ export class UserPayload {
       @ApiProperty()
       isAdm: boolean;
       @ApiProperty()
+      role?: string;
+      @ApiProperty()
       firstLogin: boolean;
 }

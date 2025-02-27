@@ -15,9 +15,14 @@ export class UserRepository implements IUserRepository {
                         name: data.name,
                         login: data.login,
                         password: data.password,
+                        role: {
+                              connect: {
+                                    id: data.role.id,
+                              },
+                        },
                         firstLogin: data.firstLogin,
                         isBlocked: data.isBlocked,
-                        isAdm: data.isAdm,
+                        isAdm: data.role.name === 'admin',
                   },
             });
       }
@@ -25,6 +30,9 @@ export class UserRepository implements IUserRepository {
       async findByLogin(login: string): Promise<User> {
             return await this.repository.user.findUnique({
                   where: { login },
+                  include: {
+                        role: true,
+                  },
             });
       }
 
@@ -39,6 +47,7 @@ export class UserRepository implements IUserRepository {
                         login: true,
                         createdAt: true,
                         updatedAt: true,
+                        role: true,
                   },
                   orderBy: {
                         isAdm: 'desc',
@@ -52,7 +61,6 @@ export class UserRepository implements IUserRepository {
                   data: {
                         name: data.name,
                         login: data.login,
-                        isAdm: data.isAdm,
                   },
             });
       }
@@ -93,6 +101,12 @@ export class UserRepository implements IUserRepository {
                         id: true,
                         name: true,
                   },
+            });
+      }
+
+      async findRoles(name: string) {
+            return await this.repository.role.findFirst({
+                  where: { name },
             });
       }
 }

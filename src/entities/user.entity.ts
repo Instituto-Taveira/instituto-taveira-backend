@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import { Role } from './role.entity';
 
 export class User {
       id: string;
@@ -8,6 +9,7 @@ export class User {
       isBlocked: boolean;
       isAdm: boolean;
       firstLogin: boolean;
+      role?: Role;
       createdAt: Date;
       updatedAt?: Date | null;
 

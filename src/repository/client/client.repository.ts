@@ -32,6 +32,7 @@ export class ClientRepository
                               contains: data.name,
                               mode: 'insensitive',
                         },
+                        deletedAt: null,
                   },
                   include: {
                         address: true,
@@ -53,6 +54,9 @@ export class ClientRepository
                   orderBy: {
                         name: 'asc',
                   },
+                  where: {
+                        deletedAt: null,
+                  },
             });
       }
 
@@ -68,6 +72,11 @@ export class ClientRepository
                         updatedAt: {
                               gte: startOfDay,
                               lte: endOfDay,
+                        },
+                        loan: {
+                              client: {
+                                    deletedAt: null,
+                              },
                         },
                   },
                   orderBy: {
@@ -94,6 +103,7 @@ export class ClientRepository
                         ...this.buildPage(page),
                         where: {
                               name: { in: clientNames },
+                              deletedAt: null,
                         },
                         orderBy: {
                               approved: 'asc',
@@ -122,7 +132,7 @@ export class ClientRepository
             const items: any = condition
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),
-                          where: { ...condition },
+                          where: { ...condition, deletedAt: null },
                           orderBy: {
                                 approved: 'asc',
                           },
@@ -148,6 +158,9 @@ export class ClientRepository
                           orderBy: {
                                 createdAt: 'desc',
                           },
+                          where: {
+                                deletedAt: null,
+                          },
                           include: {
                                 address: true,
                                 attendantUser: true,
@@ -170,9 +183,14 @@ export class ClientRepository
                   ? await this.repository.client.count({
                           where: {
                                 ...condition,
+                                deletedAt: null,
                           },
                     })
-                  : await this.repository.client.count();
+                  : await this.repository.client.count({
+                          where: {
+                                deletedAt: null,
+                          },
+                    });
             return this.buildPageResponse(
                   items,
                   Array.isArray(total) ? total.length : total,
@@ -188,6 +206,7 @@ export class ClientRepository
                 INNER JOIN "Payment" ON "Payment"."loanId" = "Loan"."id"
                 INNER JOIN "Client" ON "Client"."id" = "Loan"."clientId"
                 WHERE "Payment"."settled" = false
+                AND "Client"."deletedAt" IS NULL
                 AND EXTRACT(DAY FROM "Payment"."dueDate") = ${Number(day)}
                 AND EXTRACT(MONTH FROM "Payment"."dueDate") <= EXTRACT(MONTH FROM CURRENT_DATE)
                 AND EXTRACT(YEAR FROM "Payment"."dueDate") <= EXTRACT(YEAR FROM CURRENT_DATE)
@@ -203,6 +222,7 @@ export class ClientRepository
                 INNER JOIN "Payment" ON "Payment"."loanId" = "Loan"."id"
                 INNER JOIN "Client" ON "Client"."id" = "Loan"."clientId"
                 WHERE "Payment"."settled" = false
+                AND "Client"."deletedAt" IS NULL
                 AND EXTRACT(DAY FROM "Payment"."dueDate") = ${Number(day)}
             `;
 
@@ -302,7 +322,7 @@ export class ClientRepository
       async generateReport(data: GenerateReportLoanDto): Promise<any[]> {
             const condition: any = generateQueryByFiltersForReport(data);
             return await this.repository.client.findMany({
-                  where: condition,
+                  where: { ...condition, deletedAt: null },
                   include: {
                         loan: {
                               where: {
@@ -452,7 +472,7 @@ export class ClientRepository
             const attendant = await this.repository.user.findFirst({
                   where: {
                         name: {
-                              contains: data.attendant,
+                              equals: data.attendant,
                               mode: 'insensitive',
                         },
                   },
@@ -495,6 +515,7 @@ export class ClientRepository
                                     })),
                               },
                         },
+                        deletedAt: null,
                   },
                   include: {
                         address: true,
@@ -503,8 +524,11 @@ export class ClientRepository
             });
       }
       async delete(id: string): Promise<Client> {
-            return await this.repository.client.delete({
+            return await this.repository.client.update({
                   where: { id },
+                  data: {
+                        deletedAt: new Date(),
+                  },
                   include: {
                         address: true,
                         loan: true,
@@ -516,7 +540,7 @@ export class ClientRepository
             const attendant = await this.repository.user.findFirst({
                   where: {
                         name: {
-                              contains: data.attendant,
+                              equals: data.attendant,
                               mode: 'insensitive',
                         },
                   },

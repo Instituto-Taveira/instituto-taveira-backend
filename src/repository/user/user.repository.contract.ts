@@ -1,5 +1,6 @@
 import { CreateUserDTO } from 'src/dto/user/createUser.dto';
 import { User } from '../../entities/user.entity';
+import { Role } from '@prisma/client';
 
 export default interface IUserRepository {
       findByLogin(login: string): Promise<User>;
@@ -14,4 +15,5 @@ export default interface IUserRepository {
             firstLogin: boolean,
       ): Promise<User>;
       findAllAttendants(): Promise<Partial<User>[]>;
+      findRoles(name: string): Promise<Role>;
 }

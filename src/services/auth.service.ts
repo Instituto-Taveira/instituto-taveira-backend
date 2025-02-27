@@ -25,6 +25,7 @@ export class AuthService {
                   login: user.login,
                   id: user.id,
                   name: user.name,
+                  role: user.role.name,
                   isAdm: user.isAdm,
                   firstLogin: user.firstLogin,
             };

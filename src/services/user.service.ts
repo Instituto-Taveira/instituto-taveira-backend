@@ -23,12 +23,18 @@ export class UserService {
                         400,
                   );
             }
+            const role = await this.userRepository.findRoles(data.role);
+
+            if (!role) {
+                  throw new HttpException('Cargo não encontrado!', 404);
+            }
 
             const user: User = new User({
                   name: data.name,
                   login: data.login,
-                  isAdm: data.isAdm,
                   isBlocked: false,
+                  role: role,
+                  isAdm: false,
                   updatedAt: new Date(),
                   firstLogin: true,
                   password: '123456',

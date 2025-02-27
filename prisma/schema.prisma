@@ -16,8 +16,18 @@ model User {
   isBlocked  Boolean   @default(false)
   firstLogin Boolean   @default(false)
   createdAt  DateTime  @default(now())
+  role       Role?     @relation(fields: [roleId], references: [id])
+  roleId     String?
   updatedAt  DateTime?
   Client     Client[]
+}
+
+model Role {
+  id        String    @id @unique
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  User      User[]
 }
 
 model Client {
@@ -33,6 +43,7 @@ model Client {
   loan          Loan[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime?
+  deletedAt     DateTime?
 }
 
 model Address {

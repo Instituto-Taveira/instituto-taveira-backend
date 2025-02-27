@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-
+import { v4 as uuid } from 'uuid';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
       async onModuleInit() {
@@ -20,6 +20,28 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                               isAdm: true,
                               createdAt: new Date(),
                               updatedAt: new Date(),
+                        },
+                  });
+            }
+
+            const roles = await this.role.findMany();
+            if (roles.length === 0) {
+                  await this.role.create({
+                        data: {
+                              id: uuid(),
+                              name: 'admin',
+                        },
+                  });
+                  await this.role.create({
+                        data: {
+                              id: uuid(),
+                              name: 'attendant',
+                        },
+                  });
+                  await this.role.create({
+                        data: {
+                              id: uuid(),
+                              name: 'vendor',
                         },
                   });
             }
