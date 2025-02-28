@@ -211,13 +211,16 @@ export class ClientRepository
             return { clientNames, totalCount };
       }
 
-      findById(id: string): Promise<any> {
-            return this.repository.client.findUnique({
+      async findById(id: string): Promise<any> {
+            const LoanOpened = await this.repository.client.findUnique({
                   where: { id },
 
                   include: {
                         address: true,
                         loan: {
+                              where: {
+                                    payment_settled: false,
+                              },
                               include: {
                                     payment: {
                                           include: {
@@ -229,11 +232,41 @@ export class ClientRepository
                                     },
                               },
                               orderBy: {
-                                    payment_settled: 'asc',
+                                    startDate: 'asc',
                               },
                         },
                   },
             });
+
+            const loanClosed = await this.repository.client.findUnique({
+                  where: { id },
+
+                  include: {
+                        address: true,
+                        loan: {
+                              where: {
+                                    payment_settled: true,
+                              },
+                              include: {
+                                    payment: {
+                                          include: {
+                                                iterestDelay: true,
+                                          },
+                                          orderBy: {
+                                                dueDate: 'asc',
+                                          },
+                                    },
+                              },
+                              orderBy: {
+                                    startDate: 'asc',
+                              },
+                        },
+                  },
+            });
+
+            LoanOpened.loan.push(...loanClosed.loan);
+
+            return LoanOpened;
       }
       // async findAll(
       //       page: Page,
