@@ -28,6 +28,8 @@ export class FinanceService {
                   await this.financeRepository.getMoneyToReceive();
             const getSummaryToReceive =
                   await this.financeRepository.getSummaryToReceive();
+            const getDetailsClients =
+                  await this.financeRepository.getDetailsClients();
 
             return {
                   totalLoaned,
@@ -49,6 +51,10 @@ export class FinanceService {
                         getSummaryToReceive.totalMoneyToReceive2,
                   totaoMoneyDifference:
                         getSummaryToReceive.totaoMoneyDifference,
+                  totalClientsWithOpenLoans:
+                        getDetailsClients.totalClientsWithOpenLoans,
+                  totalClientsWithClosedLoans:
+                        getDetailsClients.totalClientsWithClosedLoans,
             };
       }
 }

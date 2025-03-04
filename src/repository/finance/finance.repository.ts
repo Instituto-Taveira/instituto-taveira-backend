@@ -345,4 +345,40 @@ export class FinanceRepository {
                   totaoMoneyDifference: totaoMoneyDifference,
             };
       }
+
+      async getDetailsClients(): Promise<{
+            totalClients: number;
+            totalClientsWithOpenLoans: number;
+            totalClientsWithClosedLoans: number;
+      }> {
+            const totalClients = await this.repository.client.count();
+
+            const totalClientsWithOpenLoans =
+                  await this.repository.client.count({
+                        where: {
+                              loan: {
+                                    some: {
+                                          payment_settled: false,
+                                    },
+                              },
+                        },
+                  });
+
+            const totalClientsWithClosedLoans =
+                  await this.repository.client.count({
+                        where: {
+                              loan: {
+                                    none: {
+                                          payment_settled: false,
+                                    },
+                              },
+                        },
+                  });
+
+            return {
+                  totalClients,
+                  totalClientsWithOpenLoans,
+                  totalClientsWithClosedLoans,
+            };
+      }
 }

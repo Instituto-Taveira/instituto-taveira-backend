@@ -26,4 +26,9 @@ export default interface IFinanceRepository {
             totalMoneyToReceive2: number;
             totaoMoneyDifference: number;
       }>;
+      getDetailsClients(): Promise<{
+            totalClients: number;
+            totalClientsWithOpenLoans: number;
+            totalClientsWithClosedLoans: number;
+      }>;
 }
