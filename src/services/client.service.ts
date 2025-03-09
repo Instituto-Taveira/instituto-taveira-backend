@@ -575,7 +575,7 @@ export class ClientService {
                         address: client.address,
                         attendant: client.attendantUser?.name ?? '',
                         observation: client.observation ?? '',
-                        approved: client.approved,
+                        approved: client.approved ? 'Sim' : 'Não',
                         hasLoanToApprove,
                         loanToApproveDate,
                         loanOpen,
