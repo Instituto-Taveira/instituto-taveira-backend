@@ -583,9 +583,6 @@ export class ClientService {
                         nextPayment: nextPayment
                               ? {
                                       ...nextPayment,
-                                      dueDate: moment(nextPayment.dueDate)
-                                            .utc()
-                                            .format('DD/MM/YYYY'),
                                 }
                               : null,
                         loan: client.loan,
