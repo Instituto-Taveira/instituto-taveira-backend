@@ -31,19 +31,20 @@ model Role {
 }
 
 model Client {
-  id            String    @id @unique
+  id            String     @id @unique
   name          String
   fone          String
   attendant     String?
   attendantId   String?
-  attendantUser User?     @relation(fields: [attendantId], references: [id])
+  attendantUser User?      @relation(fields: [attendantId], references: [id])
   observation   String?
-  approved      Boolean   @default(true)
+  approved      Boolean    @default(true)
   address       Address?
   loan          Loan[]
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime   @default(now())
   updatedAt     DateTime?
   deletedAt     DateTime?
+  Schedule      Schedule[]
 }
 
 model Address {
@@ -99,4 +100,19 @@ model IterestDelay {
   payment   Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime?
+}
+
+model Schedule {
+  id                String    @id @unique
+  client            Client    @relation(fields: [clientId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  clientId          String
+  date              DateTime
+  value             Float
+  interest_rate     Float
+  format_instalment Int
+  send              Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+  paymentIds        String    @default("[]")
+  loanIds           String    @default("[]")
 }

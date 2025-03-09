@@ -498,6 +498,17 @@ export class ClientService {
             };
       }
 
+      async findClienteForSchedule(id: string) {
+            const client = await this.clientRepository.findById(id);
+
+            if (!client)
+                  throw new HttpException(
+                        `Não foi encontrado um client com o id: ${id}`,
+                        HttpStatus.NOT_FOUND,
+                  );
+            return client;
+      }
+
       private toDTO(clients: Client[]): MappedClientDTO[] {
             return clients.map((client) => {
                   let loanOpen = 'Não';

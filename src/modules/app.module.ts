@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../config/authentication/guards/jwtAuth.guard';
 import { PaymentModule } from './payment.module';
 import { IterestDelayModule } from './iterestDelay.module';
 import { FinanceModule } from './finance.module';
+import { ScheduleModule } from './schedule.module';
 
 @Module({
       imports: [
@@ -26,6 +27,7 @@ import { FinanceModule } from './finance.module';
             AuthModule,
             IterestDelayModule,
             FinanceModule,
+            ScheduleModule,
       ],
       controllers: [AppController],
       providers: [
