@@ -112,6 +112,9 @@ export class ClientRepository
                               address: true,
                               attendantUser: true,
                               loan: {
+                                    where: {
+                                          payment_settled: false,
+                                    },
                                     include: {
                                           payment: {
                                                 include: {
@@ -140,6 +143,9 @@ export class ClientRepository
                                 address: true,
                                 attendantUser: true,
                                 loan: {
+                                      where: {
+                                            payment_settled: false,
+                                      },
                                       include: {
                                             payment: {
                                                   include: {
@@ -165,6 +171,9 @@ export class ClientRepository
                                 address: true,
                                 attendantUser: true,
                                 loan: {
+                                      where: {
+                                            payment_settled: false,
+                                      },
                                       include: {
                                             payment: {
                                                   include: {
@@ -179,22 +188,19 @@ export class ClientRepository
                           },
                     });
 
-            const total = condition
-                  ? await this.repository.client.count({
-                          where: {
-                                ...condition,
-                                deletedAt: null,
-                          },
-                    })
-                  : await this.repository.client.count({
-                          where: {
-                                deletedAt: null,
-                          },
-                    });
-            return this.buildPageResponse(
-                  items,
-                  Array.isArray(total) ? total.length : total,
-            );
+            // const total = condition
+            //       ? await this.repository.client.count({
+            //               where: {
+            //                     ...condition,
+            //                     deletedAt: null,
+            //               },
+            //         })
+            //       : await this.repository.client.count({
+            //               where: {
+            //                     deletedAt: null,
+            //               },
+            //         });
+            return this.buildPageResponse(items, items.length);
       }
 
       async findAllByDueDay(page: Page, day: string): Promise<any> {

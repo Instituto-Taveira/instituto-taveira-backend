@@ -149,14 +149,14 @@ export class ClientService {
                   );
             }
             const items = this.toDTO(clients.items);
-            items.map((client) => {
-                  let total: number;
+            // items.map((client) => {
+            //       let total: number;
 
-                  client.loan.forEach((item) => {
-                        total = total + item.value_loan;
-                  });
-                  return { total, client };
-            });
+            //       client.loan.forEach((item) => {
+            //             total = total + item.value_loan;
+            //       });
+            //       return { total, client };
+            // });
 
             return {
                   total: clients.total,
@@ -510,6 +510,8 @@ export class ClientService {
       }
 
       private toDTO(clients: Client[]): MappedClientDTO[] {
+            const now = moment.utc().subtract(4, 'hours').startOf('day');
+            const threeDaysLater = now.clone().add(3, 'days');
             return clients.map((client) => {
                   let loanOpen = 'Não';
                   let nextPayment = null;
@@ -518,12 +520,12 @@ export class ClientService {
                   let pagar = 0;
                   let hasLoanToApprove = 'Não tem';
                   let loanToApproveDate = null;
-                  client.loan.forEach((item) => {
-                        total = total + item.value_loan;
-                  });
 
                   client.loan.forEach((loan) => {
-                        if (loan.payment_settled === false) loanOpen = 'Sim';
+                        total += loan.value_loan;
+
+                        if (!loan.payment_settled) loanOpen = 'Sim';
+
                         if (!loan.approved) {
                               hasLoanToApprove = 'Pendente Aprovação';
                               loanToApproveDate = moment
@@ -531,52 +533,37 @@ export class ClientService {
                                     .format('DD/MM/YYYY');
                         }
 
-                        pagar = (total * loan.interest_rate) / 100 + total;
-
-                        if (loan.payment_settled === false) {
-                              loan.payment.forEach((payment) => {
-                                    if (!payment.settled) {
-                                          if (!nextPayment)
-                                                nextPayment = payment;
-
-                                          if (
-                                                nextPayment.dueDate >
-                                                payment.dueDate
-                                          )
-                                                nextPayment = payment;
+                        loan.payment.forEach((payment) => {
+                              if (!payment.settled) {
+                                    if (
+                                          !nextPayment ||
+                                          payment.dueDate < nextPayment.dueDate
+                                    ) {
+                                          nextPayment = payment;
                                     }
-                              });
-                        }
+                              }
+                        });
                   });
+
+                  pagar =
+                        (total * (client.loan[0]?.interest_rate || 0)) / 100 +
+                        total;
 
                   if (nextPayment) {
                         const dueDate = moment
                               .utc(nextPayment.dueDate)
                               .startOf('day');
-                        const now = moment
-                              .utc()
-                              .subtract(4, 'hours')
-                              .startOf('day');
-                        const threeDaysLater = moment
-                              .utc()
-                              .add(3, 'days')
-                              .startOf('day');
-                        if (dueDate.isBefore(now, 'day')) {
-                              status = 'Atrasado';
-                        } else if (dueDate.isSame(now, 'day')) {
-                              status = 'Hoje';
-                        } else if (
+                        if (dueDate.isBefore(now, 'day')) status = 'Atrasado';
+                        else if (dueDate.isSame(now, 'day')) status = 'Hoje';
+                        else if (
                               dueDate.isBetween(
                                     now,
                                     threeDaysLater,
                                     'day',
                                     '[]',
                               )
-                        ) {
+                        )
                               status = 'Em 3 dias';
-                        } else {
-                              status = 'Em dia';
-                        }
                   }
 
                   return {
@@ -591,11 +578,7 @@ export class ClientService {
                         loanToApproveDate,
                         loanOpen,
                         status,
-                        nextPayment: nextPayment
-                              ? {
-                                      ...nextPayment,
-                                }
-                              : null,
+                        nextPayment: nextPayment ? { ...nextPayment } : null,
                         loan: client.loan,
                         total,
                         pagar,
