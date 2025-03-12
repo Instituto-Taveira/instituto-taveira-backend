@@ -47,6 +47,15 @@ export class ScheduleService {
 
       async findAll() {
             const schedules = await this.scheduleRepository.findAll();
+
+            schedules.sort((a: any, b: any) => {
+                  if (a.send && !b.send) return 1;
+                  if (!a.send && b.send) return -1;
+                  if (a.date > b.date) return 1;
+                  if (a.date < b.date) return -1;
+                  return 0;
+            });
+
             const now = moment.utc().subtract(4, 'hours').startOf('day');
             const tomorrow = now.clone().add(1, 'days');
             const threeDaysLater = now.clone().add(3, 'days');
