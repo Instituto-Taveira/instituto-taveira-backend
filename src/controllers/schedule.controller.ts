@@ -8,6 +8,7 @@ import {
       Headers,
 } from '@nestjs/common';
 import { CreateScheduleDTO } from 'src/dto/schedule/CreateSchedule.dto';
+import { SendScheduleDTO } from 'src/dto/schedule/SendSchedule.dto';
 import { ScheduleService } from 'src/services/schedule.service';
 
 @Controller('api/schedule')
@@ -29,11 +30,12 @@ export class ScheduleController {
             return await this.scheduleService.findByClient(id);
       }
 
-      @Put('send/:id')
+      @Post('send/:id')
       async send(
             @Param('id') id: string,
             @Headers('Authorization') token: string,
+            @Body() body: SendScheduleDTO,
       ) {
-            return await this.scheduleService.send(id, token);
+            return await this.scheduleService.send(id, token, body);
       }
 }

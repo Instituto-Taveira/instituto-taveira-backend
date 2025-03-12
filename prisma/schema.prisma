@@ -110,6 +110,7 @@ model Schedule {
   value             Float
   interest_rate     Float
   format_instalment Int
+  value_sent        Float     @default(0)
   send              Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime?

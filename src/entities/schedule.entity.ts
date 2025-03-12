@@ -6,6 +6,7 @@ export class Schedule {
       date: Date;
       value: number;
       send: boolean;
+      value_sent: number;
       interest_rate: number;
       format_instalment: number;
       paymentIds: string;

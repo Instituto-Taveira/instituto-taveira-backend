@@ -1,9 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpCode, HttpException, Inject, Injectable } from '@nestjs/common';
 import { CreateScheduleDTO } from 'src/dto/schedule/CreateSchedule.dto';
 import { ScheduleRepository } from 'src/repository/schedule/schedule.repository';
 import { ClientService } from './client.service';
 import { Schedule } from 'src/entities/schedule.entity';
 import { LoanService } from './loan.service';
+import * as moment from 'moment';
+import { SendScheduleDTO } from 'src/dto/schedule/SendSchedule.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -28,6 +30,7 @@ export class ScheduleService {
                   send: false,
                   paymentIds: '',
                   loanIds: '',
+                  value_sent: 0,
                   format_instalment: createScheduleDTO.format_instalment,
                   interest_rate: createScheduleDTO.interest_rate,
                   value: createScheduleDTO.value_loan,
@@ -44,7 +47,9 @@ export class ScheduleService {
 
       async findAll() {
             const schedules = await this.scheduleRepository.findAll();
-
+            const now = moment.utc().subtract(4, 'hours').startOf('day');
+            const tomorrow = now.clone().add(1, 'days');
+            const threeDaysLater = now.clone().add(3, 'days');
             return schedules.map((schedule: any) => {
                   let amount_owed = 0;
                   if (schedule.client.loan) {
@@ -62,6 +67,21 @@ export class ScheduleService {
                   let value_with_interest =
                         schedule.value +
                         (schedule.value * schedule.interest_rate) / 100;
+
+                  let status = 'Atrasado';
+                  const dueDate = moment.utc(schedule.date).startOf('day');
+                  if (dueDate.isSame(now, 'day')) status = 'Hoje';
+                  else if (dueDate.isSame(tomorrow, 'day')) status = 'Amanhã';
+                  else if (dueDate.isBetween(now, tomorrow, 'day', '[]'))
+                        status = 'Em 2 dias';
+                  else if (dueDate.isBetween(now, threeDaysLater, 'day', '[]'))
+                        status = 'Em 3 dias';
+                  if (schedule.send) {
+                        status = 'Enviado';
+                        amount_owed = 0;
+                        value_to_loan = 0;
+                  }
+
                   return {
                         id: schedule.id,
                         clientId: schedule.clientId,
@@ -70,13 +90,15 @@ export class ScheduleService {
                         interest_rate: schedule.interest_rate,
                         value: schedule.value,
                         value_with_interest,
-                        send: schedule.send,
+                        value_sent: schedule.value_sent,
+                        send: schedule.send ? 'Sim' : 'Não',
                         client: schedule.client.name,
                         createdAt: schedule.createdAt,
                         updatedAt: schedule.updatedAt,
                         loan: schedule.client.loan!,
                         amount_owed,
                         value_to_loan,
+                        status,
                   };
             });
       }
@@ -85,7 +107,7 @@ export class ScheduleService {
             return await this.scheduleRepository.findByClient(id);
       }
 
-      async send(id: string, token: string) {
+      async send(id: string, token: string, payload: SendScheduleDTO) {
             const schedule = await this.scheduleRepository.getScheduleById(id);
 
             if (!schedule) {
@@ -103,12 +125,15 @@ export class ScheduleService {
             console.log(cliente);
 
             const total_loan = cliente.loan.reduce((acc: number, loan: any) => {
-                  return acc + loan.rest_loan;
+                  if (payload.loan_ids.includes(loan.id))
+                        return acc + loan.rest_loan;
+                  return acc;
             }, 0);
 
-            if (total_loan >= schedule.value) {
-                  throw new Error(
+            if (total_loan > schedule.value) {
+                  throw new HttpException(
                         'Valor do agendamento não é suficiente para fechar todos os empréstimos',
+                        400,
                   );
             }
 
@@ -116,19 +141,21 @@ export class ScheduleService {
             let loanIds = '';
 
             for (const loan of cliente.loan) {
-                  if (loan.payment) {
-                        for (const payment of loan.payment) {
-                              if (!payment.settled) {
-                                    paymentsIds += `${payment.id},`;
-                                    await this.updatePayment(
-                                          payment.id,
-                                          payment.value,
-                                    );
+                  if (payload.loan_ids.includes(loan.id)) {
+                        if (loan.payment) {
+                              for (const payment of loan.payment) {
+                                    if (!payment.settled) {
+                                          paymentsIds += `${payment.id},`;
+                                          await this.updatePayment(
+                                                payment.id,
+                                                payment.value,
+                                          );
+                                    }
                               }
                         }
+                        loanIds += `${loan.id},`;
+                        await this.updateLoanSettled(loan.id);
                   }
-                  loanIds += `${loan.id},`;
-                  await this.updateLoanSettled(loan.id);
             }
 
             await this.loanService.create(
@@ -146,6 +173,7 @@ export class ScheduleService {
                   schedule.id,
                   paymentsIds,
                   loanIds,
+                  schedule.value - total_loan,
             );
 
             return {

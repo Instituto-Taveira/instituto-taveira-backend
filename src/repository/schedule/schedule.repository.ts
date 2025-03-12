@@ -28,7 +28,7 @@ export class ScheduleRepository implements IScheduleRepository {
       async findAll(): Promise<Schedule[]> {
             return await this.repository.schedule.findMany({
                   orderBy: {
-                        createdAt: 'desc',
+                        date: 'asc',
                   },
                   include: {
                         client: {
@@ -100,12 +100,14 @@ export class ScheduleRepository implements IScheduleRepository {
             id: string,
             paymentIds: string,
             loanIds: string,
+            value_sent: number,
       ): Promise<void> {
             await this.repository.schedule.update({
                   where: {
                         id,
                   },
                   data: {
+                        value_sent,
                         paymentIds,
                         loanIds,
                         send: true,
