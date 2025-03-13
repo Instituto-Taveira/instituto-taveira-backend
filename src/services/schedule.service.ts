@@ -30,14 +30,19 @@ export class ScheduleService {
                   send: false,
                   paymentIds: '',
                   loanIds: '',
+                  canceled: false,
                   value_sent: 0,
+                  loan_to_settle: [],
                   format_instalment: createScheduleDTO.format_instalment,
                   interest_rate: createScheduleDTO.interest_rate,
                   value: createScheduleDTO.value_loan,
                   updatedAt: null,
             });
 
-            await this.scheduleRepository.create(schedule);
+            await this.scheduleRepository.create(
+                  schedule,
+                  createScheduleDTO.loan_to_settle,
+            );
 
             return {
                   message: 'Schedule created successfully',
@@ -53,6 +58,8 @@ export class ScheduleService {
                   if (!a.send && b.send) return -1;
                   if (a.date > b.date) return 1;
                   if (a.date < b.date) return -1;
+                  if (a.canceled && !b.canceled) return 1;
+                  if (!a.canceled && b.canceled) return -1;
                   return 0;
             });
 
@@ -61,10 +68,63 @@ export class ScheduleService {
             const threeDaysLater = now.clone().add(3, 'days');
             return schedules.map((schedule: any) => {
                   let amount_owed = 0;
-                  if (schedule.client.loan) {
-                        amount_owed = schedule.client.loan.reduce(
+                  let interest_delay = 0;
+                  if (schedule.loan_to_settle) {
+                        amount_owed = schedule.loan_to_settle.reduce(
                               (acc: number, loan: any) => {
                                     return acc + loan.rest_loan;
+                              },
+                              0,
+                        );
+
+                        interest_delay = schedule.loan_to_settle.reduce(
+                              (acc, loan) => {
+                                    let totalMoraSum = 0;
+
+                                    loan.payment.forEach((payment) => {
+                                          if (
+                                                payment.iterestDelay &&
+                                                payment.iterestDelay.payDay &&
+                                                payment.dueDate
+                                          ) {
+                                                if (
+                                                      !payment.iterestDelay
+                                                            .settled
+                                                ) {
+                                                      const payDay = new Date(
+                                                            payment.iterestDelay.payDay,
+                                                      );
+                                                      const dueDate = new Date(
+                                                            payment.dueDate,
+                                                      );
+
+                                                      const timeDiff = Math.abs(
+                                                            payDay.getTime() -
+                                                                  dueDate.getTime(),
+                                                      );
+                                                      const differenceInDays =
+                                                            Math.ceil(
+                                                                  timeDiff /
+                                                                        (1000 *
+                                                                              3600 *
+                                                                              24),
+                                                            );
+
+                                                      const result =
+                                                            differenceInDays *
+                                                            payment.iterestDelay
+                                                                  .value;
+                                                      payment.iterestDelay.days =
+                                                            differenceInDays;
+                                                      payment.iterestDelay.totalMora =
+                                                            result;
+
+                                                      totalMoraSum += result;
+                                                }
+                                          }
+                                    });
+
+                                    return acc + totalMoraSum;
                               },
                               0,
                         );
@@ -77,18 +137,31 @@ export class ScheduleService {
                         schedule.value +
                         (schedule.value * schedule.interest_rate) / 100;
 
-                  let status = 'Atrasado';
-                  const dueDate = moment.utc(schedule.date).startOf('day');
-                  if (dueDate.isSame(now, 'day')) status = 'Hoje';
-                  else if (dueDate.isSame(tomorrow, 'day')) status = 'Amanhã';
-                  else if (dueDate.isBetween(now, tomorrow, 'day', '[]'))
-                        status = 'Em 2 dias';
-                  else if (dueDate.isBetween(now, threeDaysLater, 'day', '[]'))
-                        status = 'Em 3 dias';
-                  if (schedule.send) {
-                        status = 'Enviado';
-                        amount_owed = 0;
-                        value_to_loan = 0;
+                  let status = 'Cancelado';
+                  if (!schedule.canceled) {
+                        status = 'Pendente';
+                        const dueDate = moment
+                              .utc(schedule.date)
+                              .startOf('day');
+                        if (dueDate.isSame(now, 'day')) status = 'Hoje';
+                        else if (dueDate.isSame(tomorrow, 'day'))
+                              status = 'Amanhã';
+                        else if (dueDate.isBetween(now, tomorrow, 'day', '[]'))
+                              status = 'Em 2 dias';
+                        else if (
+                              dueDate.isBetween(
+                                    now,
+                                    threeDaysLater,
+                                    'day',
+                                    '[]',
+                              )
+                        )
+                              status = 'Em 3 dias';
+                        if (schedule.send) {
+                              status = 'Enviado';
+                              amount_owed = 0;
+                              value_to_loan = 0;
+                        }
                   }
 
                   return {
@@ -104,7 +177,8 @@ export class ScheduleService {
                         client: schedule.client.name,
                         createdAt: schedule.createdAt,
                         updatedAt: schedule.updatedAt,
-                        loan: schedule.client.loan!,
+                        loan: schedule.loan_to_settle!,
+                        interest_delay,
                         amount_owed,
                         value_to_loan,
                         status,

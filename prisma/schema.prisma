@@ -76,6 +76,8 @@ model Loan {
   payment             Payment[]
   createdAt           DateTime  @default(now())
   updatedAt           DateTime?
+  Schedule            Schedule? @relation(fields: [scheduleId], references: [id])
+  scheduleId          String?
 }
 
 model Payment {
@@ -110,8 +112,10 @@ model Schedule {
   value             Float
   interest_rate     Float
   format_instalment Int
+  loan_to_settle    Loan[]
   value_sent        Float     @default(0)
   send              Boolean   @default(false)
+  canceled          Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime?
   paymentIds        String    @default("[]")

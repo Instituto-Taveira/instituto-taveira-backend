@@ -7,7 +7,7 @@ import { Schedule } from 'src/entities/schedule.entity';
 export class ScheduleRepository implements IScheduleRepository {
       constructor(private readonly repository: PrismaService) {}
 
-      async create(schedule: Schedule): Promise<void> {
+      async create(schedule: Schedule, loanIds: string[]): Promise<void> {
             await this.repository.schedule.create({
                   data: {
                         id: schedule.id,
@@ -15,12 +15,16 @@ export class ScheduleRepository implements IScheduleRepository {
                         format_instalment: schedule.format_instalment,
                         interest_rate: schedule.interest_rate,
                         value: schedule.value,
+                        canceled: false,
                         paymentIds: '',
                         loanIds: '',
                         send: false,
                         createdAt: new Date(),
                         updatedAt: null,
                         clientId: schedule.clientId,
+                        loan_to_settle: {
+                              connect: loanIds.map((id) => ({ id })),
+                        },
                   },
             });
       }
@@ -31,11 +35,12 @@ export class ScheduleRepository implements IScheduleRepository {
                         date: 'asc',
                   },
                   include: {
-                        client: {
+                        client: true,
+                        loan_to_settle: {
                               include: {
-                                    loan: {
-                                          where: {
-                                                payment_settled: false,
+                                    payment: {
+                                          include: {
+                                                iterestDelay: true,
                                           },
                                     },
                               },
@@ -66,6 +71,9 @@ export class ScheduleRepository implements IScheduleRepository {
             return await this.repository.schedule.findUnique({
                   where: {
                         id,
+                  },
+                  include: {
+                        loan_to_settle: true,
                   },
             });
       }

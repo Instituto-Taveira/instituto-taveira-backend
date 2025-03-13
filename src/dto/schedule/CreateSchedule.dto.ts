@@ -19,4 +19,6 @@ export class CreateScheduleDTO {
       @IsDate()
       @ApiProperty()
       start_date: Date;
+
+      loan_to_settle: string[];
 }
