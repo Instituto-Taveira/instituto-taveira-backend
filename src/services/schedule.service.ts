@@ -115,7 +115,6 @@ export class ScheduleService {
 
       async findAll() {
             const schedules = await this.scheduleRepository.findAll();
-            console.log('Schedules', schedules);
             schedules.sort((a: any, b: any) => {
                   if (a.send && !b.send) return 1;
                   if (!a.send && b.send) return -1;
@@ -268,12 +267,9 @@ export class ScheduleService {
             let loanIds = '';
 
             for (const loan of schedule.loan_to_settle) {
-                  console.log('PAGAMENTO PARA DAR BAIXA JUNTO');
                   if (loan.payment) {
-                        console.log('Parcela do empréstimo');
                         for (const payment of loan.payment) {
                               if (!payment.settled) {
-                                    console.log('Parcela não paga', payment);
                                     paymentsIds += `${payment.id},`;
                                     await this.updatePayment(
                                           payment.id,
@@ -285,16 +281,12 @@ export class ScheduleService {
                                                 payment.iterestDelay.id,
                                           );
                                     }
-                                    console.log('Parcela paga');
                               }
                         }
                   }
                   loanIds += `${loan.id},`;
-                  console.log('Empréstimo', loan);
                   await this.updateLoanSettled(loan.id);
-                  console.log('Empréstimo pago');
             }
-            console.log('criando empréstimo');
             await this.loanService.create(
                   {
                         format_instalment: schedule.format_instalment,
@@ -305,16 +297,12 @@ export class ScheduleService {
                   schedule.clientId,
                   token,
             );
-            console.log('empréstimo criado');
-            console.log('Atualizando agendamento');
             await this.scheduleRepository.updateSchedule(
                   schedule.id,
                   paymentsIds,
                   loanIds,
                   payload.valor_sent,
             );
-
-            console.log('Agendamento feito é enviado', payload.valor_sent);
 
             return {
                   message: 'Schedule sent successfully',
