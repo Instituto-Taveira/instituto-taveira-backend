@@ -67,13 +67,21 @@ export class ScheduleRepository implements IScheduleRepository {
             });
       }
 
-      async getScheduleById(id: string): Promise<Schedule> {
+      async getScheduleById(id: string): Promise<any> {
             return await this.repository.schedule.findUnique({
                   where: {
                         id,
                   },
                   include: {
-                        loan_to_settle: true,
+                        loan_to_settle: {
+                              include: {
+                                    payment: {
+                                          include: {
+                                                iterestDelay: true,
+                                          },
+                                    },
+                              },
+                        },
                   },
             });
       }
@@ -85,6 +93,18 @@ export class ScheduleRepository implements IScheduleRepository {
                   },
                   data: {
                         valuePaid: value,
+                        settled: true,
+                        updatedAt: new Date(),
+                  },
+            });
+      }
+
+      async updateInterestDelay(id: string): Promise<void> {
+            await this.repository.iterestDelay.update({
+                  where: {
+                        id,
+                  },
+                  data: {
                         settled: true,
                         updatedAt: new Date(),
                   },
@@ -120,6 +140,29 @@ export class ScheduleRepository implements IScheduleRepository {
                         loanIds,
                         send: true,
                         updatedAt: new Date(),
+                  },
+            });
+      }
+
+      async cancel(id: string): Promise<void> {
+            await this.repository.schedule.update({
+                  where: {
+                        id,
+                  },
+                  data: {
+                        canceled: true,
+                        updatedAt: new Date(),
+                  },
+            });
+      }
+
+      async updateLoanCanceled(id: string): Promise<void> {
+            await this.repository.loan.update({
+                  where: {
+                        id,
+                  },
+                  data: {
+                        scheduleId: null,
                   },
             });
       }

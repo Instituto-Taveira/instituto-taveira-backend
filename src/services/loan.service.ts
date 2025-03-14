@@ -108,6 +108,10 @@ export class LoanService {
             );
       }
 
+      async findManyByIds(ids: string[]) {
+            return this.loanRepository.findManyByIds(ids);
+      }
+
       findFalse() {
             return this.loanRepository.findPaymentFalse();
       }

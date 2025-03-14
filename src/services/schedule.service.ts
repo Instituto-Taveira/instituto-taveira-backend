@@ -6,6 +6,7 @@ import { Schedule } from 'src/entities/schedule.entity';
 import { LoanService } from './loan.service';
 import * as moment from 'moment';
 import { SendScheduleDTO } from 'src/dto/schedule/SendSchedule.dto';
+import { Console } from 'console';
 
 @Injectable()
 export class ScheduleService {
@@ -24,6 +25,68 @@ export class ScheduleService {
             if (!cliente) {
                   throw new Error('Client not found');
             }
+
+            if (createScheduleDTO.loan_to_settle.length > 0) {
+                  const loans = await this.loanService.findManyByIds(
+                        createScheduleDTO.loan_to_settle,
+                  );
+                  let totalMoraSum = 0;
+                  let totalLoan = 0;
+
+                  loans.forEach((loan) => {
+                        if (loan.scheduleId) {
+                              throw new HttpException(
+                                    'Empréstimo já está vinculado à outro agendamento',
+                                    400,
+                              );
+                        }
+
+                        loan.payment.forEach((payment) => {
+                              if (
+                                    payment.iterestDelay &&
+                                    payment.iterestDelay.payDay &&
+                                    payment.dueDate
+                              ) {
+                                    if (!payment.iterestDelay.settled) {
+                                          const payDay = new Date(
+                                                payment.iterestDelay.payDay,
+                                          );
+                                          const dueDate = new Date(
+                                                payment.dueDate,
+                                          );
+
+                                          const timeDiff = Math.abs(
+                                                payDay.getTime() -
+                                                      dueDate.getTime(),
+                                          );
+                                          const differenceInDays = Math.ceil(
+                                                timeDiff / (1000 * 3600 * 24),
+                                          );
+
+                                          const result =
+                                                differenceInDays *
+                                                payment.iterestDelay.value;
+                                          payment.iterestDelay.days =
+                                                differenceInDays;
+                                          payment.iterestDelay.totalMora =
+                                                result;
+
+                                          totalMoraSum += result;
+                                    }
+                              }
+                        });
+
+                        totalLoan += loan.rest_loan;
+                  });
+
+                  if (totalLoan + totalMoraSum > createScheduleDTO.value_loan) {
+                        throw new HttpException(
+                              'Valor do agendamento não é suficiente para fechar todos os empréstimos',
+                              400,
+                        );
+                  }
+            }
+
             const schedule = new Schedule({
                   date: new Date(createScheduleDTO.start_date),
                   clientId: createScheduleDTO.clientID,
@@ -52,7 +115,7 @@ export class ScheduleService {
 
       async findAll() {
             const schedules = await this.scheduleRepository.findAll();
-
+            console.log('Schedules', schedules);
             schedules.sort((a: any, b: any) => {
                   if (a.send && !b.send) return 1;
                   if (!a.send && b.send) return -1;
@@ -194,53 +257,44 @@ export class ScheduleService {
             const schedule = await this.scheduleRepository.getScheduleById(id);
 
             if (!schedule) {
-                  throw new Error('Agendamento não encontrado');
+                  throw new HttpException('Agendamento não encontrado', 400);
             }
 
             if (schedule.send) {
-                  throw new Error('Agendamento já foi enviado');
-            }
-
-            const cliente = await this.clientService.findClienteForSchedule(
-                  schedule.clientId,
-            );
-
-            console.log(cliente);
-
-            const total_loan = cliente.loan.reduce((acc: number, loan: any) => {
-                  if (payload.loan_ids.includes(loan.id))
-                        return acc + loan.rest_loan;
-                  return acc;
-            }, 0);
-
-            if (total_loan > schedule.value) {
-                  throw new HttpException(
-                        'Valor do agendamento não é suficiente para fechar todos os empréstimos',
-                        400,
-                  );
+                  throw new HttpException('Agendamento já foi enviado', 400);
             }
 
             let paymentsIds = '';
             let loanIds = '';
 
-            for (const loan of cliente.loan) {
-                  if (payload.loan_ids.includes(loan.id)) {
-                        if (loan.payment) {
-                              for (const payment of loan.payment) {
-                                    if (!payment.settled) {
-                                          paymentsIds += `${payment.id},`;
-                                          await this.updatePayment(
-                                                payment.id,
-                                                payment.value,
+            for (const loan of schedule.loan_to_settle) {
+                  console.log('PAGAMENTO PARA DAR BAIXA JUNTO');
+                  if (loan.payment) {
+                        console.log('Parcela do empréstimo');
+                        for (const payment of loan.payment) {
+                              if (!payment.settled) {
+                                    console.log('Parcela não paga', payment);
+                                    paymentsIds += `${payment.id},`;
+                                    await this.updatePayment(
+                                          payment.id,
+                                          payment.value,
+                                    );
+
+                                    if (payment.iterestDelay) {
+                                          await this.updateInterestDelay(
+                                                payment.iterestDelay.id,
                                           );
                                     }
+                                    console.log('Parcela paga');
                               }
                         }
-                        loanIds += `${loan.id},`;
-                        await this.updateLoanSettled(loan.id);
                   }
+                  loanIds += `${loan.id},`;
+                  console.log('Empréstimo', loan);
+                  await this.updateLoanSettled(loan.id);
+                  console.log('Empréstimo pago');
             }
-
+            console.log('criando empréstimo');
             await this.loanService.create(
                   {
                         format_instalment: schedule.format_instalment,
@@ -251,13 +305,16 @@ export class ScheduleService {
                   schedule.clientId,
                   token,
             );
-
+            console.log('empréstimo criado');
+            console.log('Atualizando agendamento');
             await this.scheduleRepository.updateSchedule(
                   schedule.id,
                   paymentsIds,
                   loanIds,
-                  schedule.value - total_loan,
+                  payload.valor_sent,
             );
+
+            console.log('Agendamento feito é enviado', payload.valor_sent);
 
             return {
                   message: 'Schedule sent successfully',
@@ -271,7 +328,40 @@ export class ScheduleService {
             );
       }
 
+      async updateInterestDelay(interestDelayId: string) {
+            await this.scheduleRepository.updateInterestDelay(interestDelayId);
+      }
+
       async updateLoanSettled(loanId: string) {
             await this.scheduleRepository.updateLoanSettled(loanId);
+      }
+
+      async cancel(id: string) {
+            const schedule = await this.scheduleRepository.getScheduleById(id);
+
+            if (!schedule) {
+                  throw new HttpException('Agendamento não encontrado', 400);
+            }
+
+            if (schedule.send) {
+                  throw new HttpException(
+                        'Agendamento já foi enviado, não pode ser cancelado',
+                        400,
+                  );
+            }
+
+            await this.scheduleRepository.cancel(id);
+
+            if (schedule.loan_to_settle) {
+                  for (const loan of schedule.loan_to_settle) {
+                        await this.scheduleRepository.updateLoanCanceled(
+                              loan.id,
+                        );
+                  }
+            }
+
+            return {
+                  message: 'Schedule canceled successfully',
+            };
       }
 }

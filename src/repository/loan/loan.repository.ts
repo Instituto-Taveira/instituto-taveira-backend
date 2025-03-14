@@ -112,6 +112,22 @@ export class LoanRepository extends Pageable<Loan> implements ILoanRepository {
                   },
             });
       }
+      async findManyByIds(ids: string[]): Promise<any[]> {
+            return await this.repository.loan.findMany({
+                  where: {
+                        id: {
+                              in: ids,
+                        },
+                  },
+                  include: {
+                        payment: {
+                              include: {
+                                    iterestDelay: true,
+                              },
+                        },
+                  },
+            });
+      }
 
       async updateApproved(id: string, approved: boolean): Promise<Loan> {
             return await this.repository.loan.update({

@@ -36,7 +36,6 @@ export class ClientService {
 
             if (tokenDecoded.isAdm == false)
                   props.attendant = tokenDecoded.name;
-            console.log(props);
             const address = new Address(props.address);
             const client = new Client(
                   { ...props },

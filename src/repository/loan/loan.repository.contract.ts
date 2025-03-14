@@ -11,6 +11,7 @@ export default interface ILoanRepository {
             clientId: string,
       ): Promise<Loan>;
       update(id: string): Promise<Loan>;
+      findManyByIds(ids: string[]): Promise<any[]>;
       updateRestLoan(
             id: string,
             rest_loan: number,

@@ -38,4 +38,9 @@ export class ScheduleController {
       ) {
             return await this.scheduleService.send(id, token, body);
       }
+
+      @Put('cancel/:id')
+      async cancel(@Param('id') id: string) {
+            return await this.scheduleService.cancel(id);
+      }
 }
