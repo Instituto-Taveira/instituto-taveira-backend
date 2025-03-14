@@ -29,7 +29,7 @@ export class ScheduleRepository implements IScheduleRepository {
             });
       }
 
-      async findAll(): Promise<Schedule[]> {
+      async findAll(): Promise<any[]> {
             return await this.repository.schedule.findMany({
                   orderBy: {
                         date: 'asc',
