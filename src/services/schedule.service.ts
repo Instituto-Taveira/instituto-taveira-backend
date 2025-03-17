@@ -115,13 +115,25 @@ export class ScheduleService {
 
       async findAll() {
             const schedules = await this.scheduleRepository.findAll();
+
             schedules.sort((a: any, b: any) => {
-                  if (a.send && !b.send) return 1;
-                  if (!a.send && b.send) return -1;
-                  if (a.date > b.date) return 1;
-                  if (a.date < b.date) return -1;
-                  if (a.canceled && !b.canceled) return 1;
-                  if (!a.canceled && b.canceled) return -1;
+                  if (!a.send && !a.canceled && (b.send || b.canceled))
+                        return -1;
+                  if ((a.send || a.canceled) && !b.send && !b.canceled)
+                        return 1;
+
+                  if (a.send && !a.canceled && b.canceled) return -1;
+                  if (b.send && !b.canceled && a.canceled) return 1;
+
+                  if (!a.send && !a.canceled && !b.send && !b.canceled) {
+                        if (a.date > b.date) return 1;
+                        if (a.date < b.date) return -1;
+                  }
+                  if (a.send && !a.canceled && b.send && !b.canceled) {
+                        if (a.date > b.date) return -1;
+                        if (a.date < b.date) return 1;
+                  }
+
                   return 0;
             });
 
