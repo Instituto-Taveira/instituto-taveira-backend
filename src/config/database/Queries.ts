@@ -29,7 +29,14 @@ export function generateQueryByFiltersForClient(
                                                       filters.initialDate,
                                                 ).toISOString(),
                                                 lte: new Date(
-                                                      filters.finalDate,
+                                                      new Date(
+                                                            filters.finalDate,
+                                                      ).setUTCHours(
+                                                            23,
+                                                            59,
+                                                            59,
+                                                            999,
+                                                      ),
                                                 ).toISOString(),
                                           },
                                     },
