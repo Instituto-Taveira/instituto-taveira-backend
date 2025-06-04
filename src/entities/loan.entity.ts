@@ -5,6 +5,10 @@ export enum EFormatInstalment {
       MONTHLY = 1,
       BIWEEKLY = 2,
       WEEKLY = 3,
+      TWO_MONTHS = 4,
+      THREE_MONTHS = 5,
+      FOUR_MONTHS = 6,
+      FIVE_MONTHS = 7,
 }
 
 export class Loan {

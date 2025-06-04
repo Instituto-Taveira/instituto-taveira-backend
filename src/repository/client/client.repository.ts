@@ -387,7 +387,6 @@ export class ClientRepository
             filters?: FiltersClientDTO,
       ): Promise<PageResponse<Client>> {
             const condition = generateQueryByFiltersForClient(filters);
-
             const items = condition
                   ? await this.repository.client.findMany({
                           ...this.buildPage(page),

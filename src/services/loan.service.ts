@@ -84,6 +84,10 @@ export class LoanService {
                         );
                         break;
                   case EFormatInstalment.WEEKLY:
+                  case EFormatInstalment.TWO_MONTHS:
+                  case EFormatInstalment.THREE_MONTHS:
+                  case EFormatInstalment.FOUR_MONTHS:
+                  case EFormatInstalment.FIVE_MONTHS:
                         await this.generateInstallments(
                               loan,
                               startDate,
@@ -260,6 +264,14 @@ export class LoanService {
                         return 2;
                   case EFormatInstalment.WEEKLY:
                         return 4;
+                  case EFormatInstalment.TWO_MONTHS:
+                        return 8;
+                  case EFormatInstalment.THREE_MONTHS:
+                        return 12;
+                  case EFormatInstalment.FOUR_MONTHS:
+                        return 16;
+                  case EFormatInstalment.FIVE_MONTHS:
+                        return 20;
             }
       }
 
@@ -275,6 +287,9 @@ export class LoanService {
                         moment(startDate),
                         i + 1,
                   ).toDate();
+                  console.log(startDate);
+                  console.log(value, loan.id, dueDate);
+
                   await this.paymentService.create(value, loan.id, dueDate);
             }
       }
