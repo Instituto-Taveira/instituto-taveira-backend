@@ -287,8 +287,6 @@ export class LoanService {
                         moment(startDate),
                         i + 1,
                   ).toDate();
-                  console.log(startDate);
-                  console.log(value, loan.id, dueDate);
 
                   await this.paymentService.create(value, loan.id, dueDate);
             }

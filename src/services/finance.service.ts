@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Inject, Injectable } from '@nestjs/common';
 import IFinanceRepository from 'src/repository/finance/finance.repository.contract';
 
@@ -9,27 +10,31 @@ export class FinanceService {
       ) {}
 
       async getFinanceSummary() {
-            const totalLoaned = await this.financeRepository.getTotalLoaned();
-            const totalInterest =
-                  await this.financeRepository.getTotalInterest();
-            const openLoansCount =
-                  await this.financeRepository.getOpenLoansCount();
-            const newLoansThisMonth =
-                  await this.financeRepository.getNewLoansThisMonth();
-            const totalNewLoansIn2024 =
-                  await this.financeRepository.getTotalNewLoansIn2024();
-            const totalReceivedInEachMonth =
-                  await this.financeRepository.getTotalReceivedInEachMonth();
-            const totalInterestReceivedInEachMonth =
-                  await this.financeRepository.getTotalInterestReceivedInEachMonth();
-            const getTotalLoanOpen =
-                  await this.financeRepository.getStatistics();
-            const getMoneyToReceive =
-                  await this.financeRepository.getMoneyToReceive();
-            const getSummaryToReceive =
-                  await this.financeRepository.getSummaryToReceive();
-            const getDetailsClients =
-                  await this.financeRepository.getDetailsClients();
+            const [
+                  totalLoaned,
+                  totalInterest,
+                  openLoansCount,
+                  newLoansThisMonth,
+                  totalNewLoansIn2024,
+                  totalReceivedInEachMonth,
+                  totalInterestReceivedInEachMonth,
+                  getTotalLoanOpen,
+                  getMoneyToReceive,
+                  getSummaryToReceive,
+                  getDetailsClients,
+            ] = await Promise.all([
+                  this.financeRepository.getTotalLoaned(),
+                  this.financeRepository.getTotalInterest(),
+                  this.financeRepository.getOpenLoansCount(),
+                  this.financeRepository.getNewLoansThisMonth(),
+                  this.financeRepository.getTotalNewLoansIn2024(),
+                  this.financeRepository.getTotalReceivedInEachMonth(),
+                  this.financeRepository.getTotalInterestReceivedInEachMonth(),
+                  this.financeRepository.getStatistics(),
+                  this.financeRepository.getMoneyToReceive(),
+                  this.financeRepository.getSummaryToReceive(),
+                  this.financeRepository.getDetailsClients(),
+            ]);
 
             return {
                   totalLoaned,

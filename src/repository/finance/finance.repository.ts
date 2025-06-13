@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { parse } from 'path';
 import { PrismaService } from 'src/config/database/prisma.service';
@@ -80,14 +81,17 @@ export class FinanceRepository {
       async getTotalNewLoansIn2024(): Promise<
             { month: number; total: number }[]
       > {
-            const startOfYear = new Date(2024, 0, 1);
-            const endOfYear = new Date(2024, 11, 31, 23, 59, 59);
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 11); // Get last 12 months
+            startDate.setDate(1); // Set to first day of the month
+            startDate.setHours(0, 0, 0, 0);
 
             const loans = await this.repository.loan.findMany({
                   where: {
                         createdAt: {
-                              gte: startOfYear,
-                              lte: endOfYear,
+                              gte: startDate,
+                              lte: endDate,
                         },
                   },
                   select: {
@@ -101,10 +105,19 @@ export class FinanceRepository {
                   return acc;
             }, {} as Record<number, number>);
 
-            return Object.entries(monthlyLoanCounts).map(([month, total]) => ({
-                  month: Number(month),
-                  total,
-            }));
+            // Ensure we have entries for all 12 months, even if there are no loans
+            const result = [];
+            for (let i = 0; i < 12; i++) {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  const month = date.getMonth() + 1;
+                  result.unshift({
+                        month,
+                        total: monthlyLoanCounts[month] || 0,
+                  });
+            }
+
+            return result;
       }
 
       async getTotalReceivedInEachMonth(): Promise<
@@ -114,10 +127,16 @@ export class FinanceRepository {
                   totalInterestReceived: number;
             }[]
       > {
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
             const payments = await this.repository.payment.findMany({
                   where: {
                         valuePaid: {
                               gt: 0, // Only consider payments that have been paid
+                        },
+                        updatedAt: {
+                              gte: sixMonthsAgo,
                         },
                   },
                   select: {
@@ -135,50 +154,63 @@ export class FinanceRepository {
 
             const monthlyReceivedAmounts = payments.reduce((acc, payment) => {
                   const month = payment.updatedAt.getMonth() + 1;
-                  acc[month] = (acc[month] || 0) + payment.valuePaid;
-                  return acc;
-            }, {} as Record<number, number>);
-
-            return Object.entries(monthlyReceivedAmounts).map(
-                  ([month, totalReceived]) => {
-                        let totalInterestReceived = 0;
-
-                        payments.forEach((payment) => {
-                              const paymentMonth =
-                                    payment.updatedAt.getMonth() + 1;
-                              if (paymentMonth === Number(month)) {
-                                    const loan = payment.loan;
-                                    const interestRate = loan.interest_rate;
-                                    const loanAmount = loan.value_loan;
-                                    const installments = loan.format_instalment;
-
-                                    if (interestRate > 0) {
-                                          const totalLoanAmountWithInterest =
-                                                loanAmount *
-                                                (1 + interestRate / 100);
-                                          const totalInterest =
-                                                totalLoanAmountWithInterest -
-                                                loanAmount;
-
-                                          const interestPerInstallment =
-                                                totalInterest / installments;
-                                          totalInterestReceived +=
-                                                interestPerInstallment;
-                                    }
-                              }
-                        });
-
-                        return {
-                              month: Number(month),
-                              totalReceived: parseFloat(
-                                    totalReceived.toFixed(2),
-                              ),
-                              totalInterestReceived: parseFloat(
-                                    totalInterestReceived.toFixed(2),
-                              ),
+                  const year = payment.updatedAt.getFullYear();
+                  const key = `${year}-${month}`;
+                  if (!acc[key]) {
+                        acc[key] = {
+                              totalReceived: 0,
+                              totalInterestReceived: 0,
+                              year,
+                              month,
                         };
-                  },
-            );
+                  }
+                  acc[key].totalReceived += payment.valuePaid;
+                  return acc;
+            }, {} as Record<string, { totalReceived: number; totalInterestReceived: number; year: number; month: number }>);
+
+            // Calculate interest for each month
+            Object.values(monthlyReceivedAmounts).forEach((monthData) => {
+                  payments.forEach((payment) => {
+                        const paymentMonth = payment.updatedAt.getMonth() + 1;
+                        const paymentYear = payment.updatedAt.getFullYear();
+
+                        if (
+                              paymentMonth === monthData.month &&
+                              paymentYear === monthData.year
+                        ) {
+                              const loan = payment.loan;
+                              const interestRate = loan.interest_rate;
+                              const loanAmount = loan.value_loan;
+                              const installments = loan.format_instalment;
+
+                              if (interestRate > 0) {
+                                    const totalLoanAmountWithInterest =
+                                          loanAmount * (1 + interestRate / 100);
+                                    const totalInterest =
+                                          totalLoanAmountWithInterest -
+                                          loanAmount;
+                                    const interestPerInstallment =
+                                          totalInterest / installments;
+                                    monthData.totalInterestReceived +=
+                                          interestPerInstallment;
+                              }
+                        }
+                  });
+            });
+
+            // Convert to array and sort by year and month
+            return Object.values(monthlyReceivedAmounts)
+                  .sort((a, b) => {
+                        if (a.year !== b.year) return a.year - b.year;
+                        return a.month - b.month;
+                  })
+                  .map(({ month, totalReceived, totalInterestReceived }) => ({
+                        month,
+                        totalReceived: parseFloat(totalReceived.toFixed(2)),
+                        totalInterestReceived: parseFloat(
+                              totalInterestReceived.toFixed(2),
+                        ),
+                  }));
       }
 
       async getTotalInterestReceivedInEachMonth(): Promise<
@@ -297,6 +329,18 @@ export class FinanceRepository {
                                     : format_instalment ===
                                       EFormatInstalment.WEEKLY
                                     ? 4
+                                    : format_instalment ===
+                                      EFormatInstalment.TWO_MONTHS
+                                    ? 8
+                                    : format_instalment ===
+                                      EFormatInstalment.THREE_MONTHS
+                                    ? 12
+                                    : format_instalment ===
+                                      EFormatInstalment.FOUR_MONTHS
+                                    ? 16
+                                    : format_instalment ===
+                                      EFormatInstalment.FIVE_MONTHS
+                                    ? 20
                                     : 1;
 
                         if (interestRate > 0) {
