@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
       HttpException,
       HttpStatus,
@@ -38,7 +39,7 @@ export class LoanService {
                   (payload.value_loan * payload.interest_rate) / 100 +
                   payload.value_loan;
 
-            let approved: boolean = false;
+            let approved = false;
             const tokenDecoded = await this.authService.decodeJWT(token);
 
             if (tokenDecoded.isAdm == true) approved = true;
@@ -101,7 +102,7 @@ export class LoanService {
       }
 
       async findTrue(payment_settled: string, clientId: string) {
-            let booleanPayment_settled =
+            const booleanPayment_settled =
                   payment_settled == 'true' ? true : false;
 
             await this.clientService.listById(clientId);
@@ -287,6 +288,9 @@ export class LoanService {
                         moment(startDate),
                         i + 1,
                   ).toDate();
+                  if (startDate.getDate() == 30 && installments == 1) {
+                        dueDate.setDate(29);
+                  }
 
                   await this.paymentService.create(value, loan.id, dueDate);
             }
