@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Schedule" ADD COLUMN     "value_sent" DOUBLE PRECISION NOT NULL DEFAULT 0;

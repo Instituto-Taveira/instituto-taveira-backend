@@ -1,134 +1,53 @@
-import { convertAndVerifyNumber } from '../../utils/Utils';
-import { IQueryClient } from '../../dto/client/queryClient';
-import { FiltersClientDTO } from 'src/dto/client/filterClient.dto';
-import { GenerateReportLoanDto } from 'src/dto/loan/generate-report-loan.dto';
+import { FiltersPessoaDTO } from '../../dto/pessoa/filterPessoa.dto';
 
-export function generateQueryByFiltersForClient(
-      filters: FiltersClientDTO,
-): IQueryClient {
+export function generateQueryByFiltersForPessoa(
+      filters: FiltersPessoaDTO,
+): any {
       const fields = {
-            name: () => ({
-                  name: { contains: filters.name, mode: 'insensitive' },
+            nome: () => ({
+                  nome: { contains: filters.nome, mode: 'insensitive' },
             }),
-            attendant: () => ({
-                  attendantUser: {
-                        name: {
-                              contains: filters.attendant,
-                              mode: 'insensitive',
-                        },
-                  },
+            cpf: () => ({
+                  cpf: { contains: filters.cpf, mode: 'insensitive' },
             }),
-            initialDate: () => ({
-                  loan: {
-                        some: {
-                              payment: {
-                                    some: {
-                                          settled: false,
-                                          dueDate: {
-                                                gte: new Date(
-                                                      filters.initialDate,
-                                                ).toISOString(),
-                                                lte: new Date(
-                                                      new Date(
-                                                            filters.finalDate,
-                                                      ).setUTCHours(
-                                                            23,
-                                                            59,
-                                                            59,
-                                                            999,
-                                                      ),
-                                                ).toISOString(),
-                                          },
-                                    },
-                              },
-                        },
-                  },
+            rg: () => ({
+                  rg: { contains: filters.rg, mode: 'insensitive' },
             }),
-            fone: () => ({
-                  fone: filters.fone,
+            dataNascimento: () => ({
+                  dataNascimento: new Date(filters.dataNascimento),
             }),
-            address: () => ({
-                  address: filters.address,
+            cidade: () => ({
+                  cidade: { contains: filters.cidade, mode: 'insensitive' },
             }),
-            loan: () => ({
-                  loan: filters.loan,
+            bairro: () => ({
+                  bairro: { contains: filters.bairro, mode: 'insensitive' },
+            }),
+            estado: () => ({
+                  estado: { contains: filters.estado, mode: 'insensitive' },
+            }),
+            whatsapp: () => ({
+                  whatsapp: { contains: filters.whatsapp, mode: 'insensitive' },
             }),
       };
 
       const keysFields = Object.keys(fields);
-
       let query: any;
-
+      // eslint-disable-next-line @typescript-eslint/ban-types
       let queryBuilder: Function;
 
       for (const filter in filters) {
-            if (keysFields.includes(filter)) {
+            if (filters[filter] && keysFields.includes(filter)) {
                   queryBuilder = fields[filter];
 
-                  if (query) {
-                        const newCondition = queryBuilder();
+                  const newCondition = queryBuilder();
 
+                  if (query) {
                         Object.assign(query, { ...newCondition });
                   } else {
-                        query = queryBuilder();
+                        query = newCondition;
                   }
             }
       }
-      // console.log(query.loan.every.payment.every);
-      return query;
-}
 
-export function generateQueryByFiltersForReport(
-      filters: GenerateReportLoanDto,
-): IQueryClient {
-      const fields = {
-            attendant: () => ({
-                  attendantUser: {
-                        name: {
-                              contains: filters.attendant,
-                              mode: 'insensitive',
-                        },
-                  },
-            }),
-            initialDate: () => ({
-                  loan: {
-                        some: {
-                              payment: {
-                                    some: {
-                                          settled: false,
-                                          dueDate: {
-                                                gte: new Date(
-                                                      filters.initialDate,
-                                                ).toISOString(),
-                                                lte: new Date(
-                                                      filters.finalDate,
-                                                ).toISOString(),
-                                          },
-                                    },
-                              },
-                        },
-                  },
-            }),
-      };
-
-      const keysFields = Object.keys(fields);
-
-      let query: any;
-
-      let queryBuilder: Function;
-
-      for (const filter in filters) {
-            if (keysFields.includes(filter)) {
-                  queryBuilder = fields[filter];
-
-                  if (query) {
-                        const newCondition = queryBuilder();
-
-                        Object.assign(query, { ...newCondition });
-                  } else {
-                        query = queryBuilder();
-                  }
-            }
-      }
       return query;
 }

@@ -15,7 +15,6 @@ import { LocalAuthGuard } from '../config/authentication/guards/localAuth.guard'
 import { JwtAuthGuard } from '../config/authentication/guards/jwtAuth.guard';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { AuthRequest } from 'src/dto/user/authRequest.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { UserToken } from 'src/dto/auth/userToken.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdatePasswordUserDTO } from 'src/dto/user/updatePasswordUser.dto';
@@ -29,7 +28,6 @@ export class AuthController {
             summary: 'Login',
             description: 'Utilize este endpoint para realizar o login.',
       })
-      @IsPublic()
       @UseGuards(LocalAuthGuard)
       @Post('login')
       @HttpCode(HttpStatus.OK)

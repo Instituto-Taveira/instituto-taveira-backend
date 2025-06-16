@@ -2,26 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
       const app = await NestFactory.create(AppModule);
 
+      app.use(json({ limit: '50mb' }));
+
+      app.use(urlencoded({ extended: true, limit: '50mb' }));
+
       const config = new DocumentBuilder()
-            .setTitle('Financeira API')
-            .setDescription('API gerenciamento de emprestimos a juros')
+            .setTitle('Instituto Taverna API')
+            .setDescription('API do instituto taverna')
             .setVersion('1.2')
             .addTag('Auth', 'Métodos para autenticação de usuários')
-            .addTag('User', 'Métodos para o gerenciamento de usuarios')
-            .addTag('Client', 'Métodos para o gerenciamento de clientes')
-            .addTag(
-                  'Loan',
-                  'Métodos para o gerenciamento de pagamento de empréstimos',
-            )
-            .addTag('Address', 'Métodos para o gerenciamento de endereços')
-            .addTag(
-                  'IterestDelay',
-                  'Métodos para o gerenciamento de Juros Mora.',
-            )
             .addBearerAuth({
                   type: 'http',
                   scheme: 'bearer',

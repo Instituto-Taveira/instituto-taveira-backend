@@ -3,7 +3,6 @@ import { CreateUserDTO } from 'src/dto/user/createUser.dto';
 import { User } from 'src/entities/user.entity';
 import IUserRepository from 'src/repository/user/user.repository.contract';
 import { AuthService } from './auth.service';
-import { UpdatePasswordUserDTO } from 'src/dto/user/updatePasswordUser.dto';
 
 @Injectable()
 export class UserService {

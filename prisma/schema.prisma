@@ -19,7 +19,6 @@ model User {
   role       Role?     @relation(fields: [roleId], references: [id])
   roleId     String?
   updatedAt  DateTime?
-  Client     Client[]
 }
 
 model Role {
@@ -30,94 +29,34 @@ model Role {
   User      User[]
 }
 
-model Client {
-  id            String     @id @unique
-  name          String
-  fone          String
-  attendant     String?
-  attendantId   String?
-  attendantUser User?      @relation(fields: [attendantId], references: [id])
-  observation   String?
-  approved      Boolean    @default(true)
-  address       Address?
-  loan          Loan[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime?
-  deletedAt     DateTime?
-  Schedule      Schedule[]
-}
+model Pessoa {
+  id             String   @id @default(uuid())
+  nome           String
+  dataNascimento DateTime
+  cpf            String?  @unique
+  rg             String?
+  tituloEleitor  String?
+  localVotacao   String?
+  cartaoSUS      String?
+  numeroContato  String?
+  whatsapp       String?
+  fotoBase64     String?
 
-model Address {
-  id        String    @id @unique
-  street    String
-  district  String
-  number    String
-  city      String
-  client    Client?   @relation(fields: [clientId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  clientId  String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
-}
+  dependenteDeId String?
+  dependenteDe   Pessoa? @relation("DependenteRelation", fields: [dependenteDeId], references: [id])
 
-model Loan {
-  id                  String    @id @unique
-  payment_settled     Boolean   @default(false)
-  value_loan          Float
-  interest_rate       Float
-  rest_loan           Float
-  format_instalment   Int
-  client              Client    @relation(fields: [clientId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  clientId            String
-  startDate           DateTime
-  dueDate             DateTime
-  approved            Boolean   @default(true)
-  only_pay_interest   Boolean   @default(false)
-  value_interest_paid Float     @default(0)
-  payment             Payment[]
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime?
-  Schedule            Schedule? @relation(fields: [scheduleId], references: [id])
-  scheduleId          String?
-}
+  dependentes Pessoa[] @relation("DependenteRelation")
 
-model Payment {
-  id           String        @id @unique
-  value        Float
-  valuePaid    Float
-  settled      Boolean       @default(false)
-  loan         Loan          @relation(fields: [loanId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  loanId       String
-  dueDate      DateTime
-  iterestDelay IterestDelay?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime?
-}
+  endereco        String?
+  rua             String
+  numero          String
+  bairro          String
+  complemento     String?
+  pontoReferencia String?
+  cidade          String
+  estado          String
+  cep             String
 
-model IterestDelay {
-  id        String    @id @unique
-  value     Float
-  payDay    DateTime
-  settled   Boolean   @default(false)
-  paymentId String    @unique
-  payment   Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
-}
-
-model Schedule {
-  id                String    @id @unique
-  client            Client    @relation(fields: [clientId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  clientId          String
-  date              DateTime
-  value             Float
-  interest_rate     Float
-  format_instalment Int
-  loan_to_settle    Loan[]
-  value_sent        Float     @default(0)
-  send              Boolean   @default(false)
-  canceled          Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime?
-  paymentIds        String    @default("[]")
-  loanIds           String    @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,4 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
+import { Role } from 'src/entities/role.entity';
 
 export class AuthUserDTO {
       @ApiProperty()
@@ -9,4 +10,6 @@ export class AuthUserDTO {
       login: string;
       @ApiProperty()
       isAdm: boolean;
+      @ApiProperty()
+      role: Role;
 }

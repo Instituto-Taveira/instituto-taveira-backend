@@ -35,13 +35,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                   await this.role.create({
                         data: {
                               id: uuid(),
-                              name: 'attendant',
-                        },
-                  });
-                  await this.role.create({
-                        data: {
-                              id: uuid(),
-                              name: 'vendor',
+                              name: 'user',
                         },
                   });
             }
