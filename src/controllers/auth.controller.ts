@@ -31,10 +31,9 @@ export class AuthController {
       @UseGuards(LocalAuthGuard)
       @Post('login')
       @HttpCode(HttpStatus.OK)
+      @IsPublic()
       async login(@Request() req: AuthRequest) {
             return this.authService.login(req.user);
-            /* console.log(req);
-            return req; */
       }
 
       @ApiOperation({
