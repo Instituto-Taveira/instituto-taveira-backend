@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, Length } from 'class-validator';
 
+export interface CreateDependenteDTO {
+      id: any;
+      nome: string;
+      dataNascimento: Date;
+      cpf?: string;
+      rg?: string;
+      numeroContato?: string;
+      tituloEleitor?: string;
+      localVotacao?: string;
+      cartaoSUS?: string;
+      tipo: string;
+}
+
+
 export class CreatePessoaDTO {
       @ApiProperty()
       @IsString()
@@ -86,8 +100,7 @@ export class CreatePessoaDTO {
 
       @ApiProperty({ required: false })
       @IsOptional()
-      @IsString()
-      dependenteDeId?: string;
+      dependentes?: CreateDependenteDTO[];
 
       @ApiProperty({ required: false, description: 'Imagem em base64' })
       @IsOptional()

@@ -20,7 +20,6 @@ services:
                   - .env
             networks:
                   - api-network
-
       postgres-db:
             container_name: postgres-db
             image: postgres

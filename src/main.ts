@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
 import { json, urlencoded } from 'express';
+import { DomainExceptionFilter } from './common/filters/domain-exception.filter';
 
 async function bootstrap() {
       const app = await NestFactory.create(AppModule);
@@ -10,6 +10,7 @@ async function bootstrap() {
       app.use(json({ limit: '50mb' }));
 
       app.use(urlencoded({ extended: true, limit: '50mb' }));
+      app.useGlobalFilters(new DomainExceptionFilter());
 
       const config = new DocumentBuilder()
             .setTitle('Instituto Taverna API')

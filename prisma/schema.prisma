@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-  id         String    @id @unique
+  id         Int       @id @default(autoincrement())
   name       String
   login      String    @unique
   password   String
@@ -17,12 +17,12 @@ model User {
   firstLogin Boolean   @default(false)
   createdAt  DateTime  @default(now())
   role       Role?     @relation(fields: [roleId], references: [id])
-  roleId     String?
+  roleId     Int?
   updatedAt  DateTime?
 }
 
 model Role {
-  id        String    @id @unique
+  id        Int       @id @default(autoincrement())
   name      String
   createdAt DateTime  @default(now())
   updatedAt DateTime?
@@ -30,23 +30,17 @@ model Role {
 }
 
 model Pessoa {
-  id             String   @id @default(uuid())
-  nome           String
-  dataNascimento DateTime
-  cpf            String?  @unique
-  rg             String?
-  tituloEleitor  String?
-  localVotacao   String?
-  cartaoSUS      String?
-  numeroContato  String?
-  whatsapp       String?
-  fotoBase64     String?
-
-  dependenteDeId String?
-  dependenteDe   Pessoa? @relation("DependenteRelation", fields: [dependenteDeId], references: [id])
-
-  dependentes Pessoa[] @relation("DependenteRelation")
-
+  id              Int      @id @default(autoincrement())
+  nome            String
+  dataNascimento  DateTime
+  cpf             String?  @unique
+  rg              String?
+  tituloEleitor   String?
+  localVotacao    String?
+  cartaoSUS       String?
+  numeroContato   String?
+  whatsapp        String?
+  fotoBase64      String?
   endereco        String?
   rua             String
   numero          String
@@ -57,6 +51,24 @@ model Pessoa {
   estado          String
   cep             String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Dependente Dependente[]
+}
+
+model Dependente {
+  id             Int      @id @default(autoincrement())
+  nome           String
+  dataNascimento DateTime
+  tipo           String   @default("")
+  cpf            String?  @unique
+  rg             String?
+  tituloEleitor  String?
+  localVotacao   String?
+  cartaoSUS      String?
+  numeroContato  String?
+  pessoaId       Int
+  pessoa         Pessoa   @relation(fields: [pessoaId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

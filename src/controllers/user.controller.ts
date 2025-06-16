@@ -64,8 +64,8 @@ export class UserController {
       })
       @Patch(':id')
       @UseGuards(JwtAuthGuard)
-      async update(@Param('id') id: string, @Body() payload: CreateUserDTO) {
-            await this.userService.update(id, payload);
+      async update(@Param('id') id: number, @Body() payload: CreateUserDTO) {
+            await this.userService.update(Number(id), payload);
 
             return { message: 'Usuário atualizado com sucesso!' };
       }
@@ -77,8 +77,8 @@ export class UserController {
       })
       @Patch('/update-password/:id')
       @UseGuards(JwtAuthGuard)
-      async updatePassword(@Param('id') id: string) {
-            await this.userService.resetUserPassword(id);
+      async updatePassword(@Param('id') id: number) {
+            await this.userService.resetUserPassword(Number(id));
 
             return { message: 'Usuário atualizado com sucesso!' };
       }
@@ -90,8 +90,8 @@ export class UserController {
       })
       @Delete(':id')
       @UseGuards(JwtAuthGuard)
-      async delete(@Param('id') id: string) {
-            await this.userService.delete(id);
+      async delete(@Param('id') id: number) {
+            await this.userService.delete(Number(id));
 
             return { message: 'Usuário deletado com sucesso!' };
       }

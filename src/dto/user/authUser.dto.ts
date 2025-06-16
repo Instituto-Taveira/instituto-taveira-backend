@@ -3,7 +3,7 @@ import { Role } from 'src/entities/role.entity';
 
 export class AuthUserDTO {
       @ApiProperty()
-      id: string;
+      id: number;
       @ApiProperty()
       name: string;
       @ApiProperty()

@@ -1,9 +1,22 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuid } from 'uuid';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
       async onModuleInit() {
+            const roles = await this.role.findMany();
+            if (roles.length === 0) {
+                  await this.role.create({
+                        data: {
+                              name: 'admin',
+                        },
+                  });
+                  await this.role.create({
+                        data: {
+                              name: 'user',
+                        },
+                  });
+            }
+
             const admin = await this.user.findFirst({
                   where: {
                         login: 'adm@gmail.com',
@@ -13,29 +26,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             if (!admin) {
                   await this.user.create({
                         data: {
-                              id: new Date().getTime().toString(),
                               name: 'Admin',
                               login: 'adm@gmail.com',
+                              //password: '6eT68&awa*d{',
                               password: '123456',
                               isAdm: true,
+                              roleId: 1,
                               createdAt: new Date(),
                               updatedAt: new Date(),
-                        },
-                  });
-            }
-
-            const roles = await this.role.findMany();
-            if (roles.length === 0) {
-                  await this.role.create({
-                        data: {
-                              id: uuid(),
-                              name: 'admin',
-                        },
-                  });
-                  await this.role.create({
-                        data: {
-                              id: uuid(),
-                              name: 'user',
                         },
                   });
             }

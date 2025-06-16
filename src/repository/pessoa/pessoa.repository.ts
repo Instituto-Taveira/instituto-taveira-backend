@@ -6,51 +6,122 @@ import IPessoaRepository from './pessoa.repository.contract';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { generateQueryByFiltersForPessoa } from 'src/config/database/Queries';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
+import { PessoaMapper } from 'src/mapper/pessoa.mapper';
+import { CPF } from 'src/entities/cpf.entity';
 
 @Injectable()
 export class PessoaRepository implements IPessoaRepository {
-      constructor(private readonly repository: PrismaService) {}
+      constructor(private readonly repository: PrismaService) { }
 
-      async create(data: Pessoa): Promise<Pessoa> {
-            return await this.repository.pessoa.create({
-                  data: {
-                        id: data.id,
-                        nome: data.nome,
-                        dataNascimento: data.dataNascimento,
-                        cpf: data.cpf,
-                        rg: data.rg,
-                        tituloEleitor: data.tituloEleitor,
-                        localVotacao: data.localVotacao,
-                        cartaoSUS: data.cartaoSUS,
-                        numeroContato: data.numeroContato,
-                        whatsapp: data.whatsapp,
-                        endereco: data.endereco,
-                        rua: data.rua,
-                        numero: data.numero,
-                        bairro: data.bairro,
-                        complemento: data.complemento,
-                        pontoReferencia: data.pontoReferencia,
-                        cidade: data.cidade,
-                        estado: data.estado,
-                        cep: data.cep,
-                        createdAt: data.createdAt,
-                        updatedAt: data.updatedAt,
-                        fotoBase64: data.fotoBase64,
-                        dependenteDeId: data.dependenteDeId,
-                  },
+      async create(data: CreatePessoaDTO): Promise<Pessoa> {
+
+            const dataMapper = PessoaMapper.toPrismaCreate(data);
+            const created = await this.repository.pessoa.create({
+                  data: dataMapper,
+                  include: { Dependente: true },
             });
+
+            return PessoaMapper.toDomain(created);
       }
 
-      async findById(id: string): Promise<Pessoa | null> {
-            return await this.repository.pessoa.findUnique({
+      async findById(id: number): Promise<Pessoa | null> {
+
+            const foundById = await this.repository.pessoa.findUnique({
                   where: { id },
+                  select: {
+                        id: true,
+                        nome: true,
+                        numeroContato: true,
+                        whatsapp: true,
+                        dataNascimento: true,
+                        cpf: true,
+                        rg: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        bairro: true,
+                        cidade: true,
+                        estado: true,
+                        cep: true,
+                        endereco: true,
+                        rua: true,
+                        numero: true,
+                        complemento: true,
+                        pontoReferencia: true,
+                        fotoBase64: true,
+                        cartaoSUS: true,
+                        tituloEleitor: true,
+                        localVotacao: true,
+                        Dependente: {
+                              select: {
+                                    id: true,
+                                    nome: true,
+                                    dataNascimento: true,
+                                    cpf: true,
+                                    rg: true,
+                                    tituloEleitor: true,
+                                    localVotacao: true,
+                                    cartaoSUS: true,
+                                    numeroContato: true,
+                                    createdAt: true,
+                                    updatedAt: true,
+                              },
+                              orderBy: {
+                                    createdAt: 'desc',
+                              },
+                        },
+                  },
             });
+
+            if (!foundById) {
+                  return null;
+            }
+
+            const pessoaHttp = PessoaMapper.toHttp({
+                  id: foundById.id,
+                  nome: foundById.nome,
+                  numeroContato: foundById.numeroContato,
+                  whatsapp: foundById.whatsapp,
+                  dataNascimento: foundById.dataNascimento,
+                  cpf: new CPF(foundById.cpf),
+                  rg: foundById.rg,
+                  createdAt: foundById.createdAt,
+                  updatedAt: foundById.updatedAt,
+                  bairro: foundById.bairro,
+                  cidade: foundById.cidade,
+                  estado: foundById.estado,
+                  cep: foundById.cep,
+                  endereco: foundById.endereco,
+                  rua: foundById.rua,
+                  numero: foundById.numero,
+                  complemento: foundById.complemento,
+                  pontoReferencia: foundById.pontoReferencia,
+                  fotoBase64: foundById.fotoBase64,
+                  dependentes: foundById.Dependente.map(dep => ({
+                        id: dep.id,
+                        nome: dep.nome,
+                        dataNascimento: dep.dataNascimento,
+                        cpf: dep.cpf,
+                        rg: dep.rg,
+                        tituloEleitor: dep.tituloEleitor,
+                        localVotacao: dep.localVotacao,
+                        cartaoSUS: dep.cartaoSUS,
+                        numeroContato: dep.numeroContato,
+                  })),
+            });
+
+            return pessoaHttp
+
       }
 
       async findByCPF(cpf: string): Promise<Pessoa | null> {
-            return await this.repository.pessoa.findUnique({
+            const foundByCpf = await this.repository.pessoa.findUnique({
                   where: { cpf },
             });
+
+            if (!foundByCpf) return null;
+
+            const pessoa = PessoaMapper.toEntity(foundByCpf);
+            return PessoaMapper.toHttp(pessoa);
       }
 
       async findAll(
@@ -66,7 +137,7 @@ export class PessoaRepository implements IPessoaRepository {
                   where,
             });
 
-            const data = await this.repository.pessoa.findMany({
+            const rawData = await this.repository.pessoa.findMany({
                   where,
                   select: {
                         id: true,
@@ -78,12 +149,63 @@ export class PessoaRepository implements IPessoaRepository {
                         rg: true,
                         createdAt: true,
                         updatedAt: true,
+                        Dependente: {
+                              select: {
+                                    id: true,
+                                    nome: true,
+                                    dataNascimento: true,
+                                    cpf: true,
+                                    rg: true,
+                                    tituloEleitor: true,
+                                    localVotacao: true,
+                                    cartaoSUS: true,
+                                    numeroContato: true,
+                              },
+                              orderBy: {
+                                    createdAt: 'desc',
+                              },
+                        },
+                        _count: {
+                              select: {
+                                    Dependente: true,
+                              },
+                        },
                   },
                   orderBy: {
                         createdAt: 'desc',
                   },
                   skip: skip,
                   take: limit,
+            });
+
+            const data = rawData.map(item => {
+                  const pessoaHttp = PessoaMapper.toHttp({
+                        id: item.id,
+                        nome: item.nome,
+                        numeroContato: item.numeroContato,
+                        whatsapp: item.whatsapp,
+                        dataNascimento: item.dataNascimento,
+                        cpf: new CPF(item.cpf),
+                        rg: item.rg,
+                        createdAt: item.createdAt,
+                        updatedAt: item.updatedAt,
+                        dependentes: item.Dependente.map(dep => ({
+                              id: dep.id,
+                              nome: dep.nome,
+                              dataNascimento: dep.dataNascimento,
+                              cpf: dep.cpf,
+                              rg: dep.rg,
+                              tituloEleitor: dep.tituloEleitor,
+                              localVotacao: dep.localVotacao,
+                              cartaoSUS: dep.cartaoSUS,
+                              numeroContato: dep.numeroContato,
+                        })),
+                  });
+
+                  return {
+                        ...pessoaHttp,
+                        numeroDependentes: item._count.Dependente,
+                  };
             });
 
             const totalPages = Math.ceil(total / limit);
@@ -97,8 +219,8 @@ export class PessoaRepository implements IPessoaRepository {
             };
       }
 
-      async update(id: string, data: CreatePessoaDTO): Promise<Pessoa> {
-            return await this.repository.pessoa.update({
+      async update(id: number, data: CreatePessoaDTO): Promise<Pessoa> {
+            const updated = await this.repository.pessoa.update({
                   where: { id },
                   data: {
                         nome: data.nome,
@@ -120,13 +242,42 @@ export class PessoaRepository implements IPessoaRepository {
                         estado: data.estado,
                         cep: data.cep,
                         fotoBase64: data.fotoBase64,
-                        dependenteDeId: data.dependenteDeId,
                         updatedAt: new Date(),
+                        Dependente: {
+                              updateMany: data.dependentes?.map(dep => ({
+                                    where: { id: dep.id },
+                                    data: {
+                                          nome: dep.nome,
+                                          dataNascimento: dep.dataNascimento,
+                                          cpf: dep.cpf,
+                                          rg: dep.rg,
+                                          tituloEleitor: dep.tituloEleitor,
+                                          localVotacao: dep.localVotacao,
+                                          cartaoSUS: dep.cartaoSUS,
+                                          numeroContato: dep.numeroContato,
+                                    },
+                              })) || [],
+                              createMany: {
+                                    data: data.dependentes?.map(dep => ({
+                                          nome: dep.nome,
+                                          dataNascimento: dep.dataNascimento,
+                                          cpf: dep.cpf,
+                                          rg: dep.rg,
+                                          tituloEleitor: dep.tituloEleitor,
+                                          localVotacao: dep.localVotacao,
+                                          cartaoSUS: dep.cartaoSUS,
+                                          numeroContato: dep.numeroContato,
+                                    })) || [],
+                              },
+                        },
                   },
+                  include: { Dependente: true }
             });
+
+            return PessoaMapper.toDomain(updated);
       }
 
-      async delete(id: string): Promise<void> {
+      async delete(id: number): Promise<void> {
             await this.repository.pessoa.delete({
                   where: { id },
             });

@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UserPayload {
       @ApiProperty()
-      id: string;
+      id: number;
       @ApiProperty()
       login: string;
       @ApiProperty()

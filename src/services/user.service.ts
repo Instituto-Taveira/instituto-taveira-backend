@@ -3,6 +3,7 @@ import { CreateUserDTO } from 'src/dto/user/createUser.dto';
 import { User } from 'src/entities/user.entity';
 import IUserRepository from 'src/repository/user/user.repository.contract';
 import { AuthService } from './auth.service';
+import { Role } from 'src/entities/role.entity';
 
 @Injectable()
 export class UserService {
@@ -11,7 +12,7 @@ export class UserService {
             private readonly userRepository: IUserRepository,
             @Inject(forwardRef(() => AuthService))
             private readonly authService: AuthService,
-      ) {}
+      ) { }
 
       async create(data: CreateUserDTO): Promise<User> {
             const existUser = await this.userRepository.findByLogin(data.login);
@@ -49,7 +50,7 @@ export class UserService {
             return await this.userRepository.findAll();
       }
 
-      async update(id: string, data: CreateUserDTO): Promise<void> {
+      async update(id: number, data: CreateUserDTO): Promise<void> {
             const user = await this.userRepository.findById(id);
 
             if (!user) {
@@ -70,7 +71,7 @@ export class UserService {
             return;
       }
 
-      async resetUserPassword(id: string): Promise<void> {
+      async resetUserPassword(id: number): Promise<void> {
             const user = await this.userRepository.findById(id);
 
             if (!user) {
@@ -82,7 +83,7 @@ export class UserService {
             return;
       }
 
-      async delete(id: string): Promise<void> {
+      async delete(id: number): Promise<void> {
             const user = await this.userRepository.findById(id);
 
             if (!user) {
@@ -94,7 +95,7 @@ export class UserService {
             return;
       }
 
-      async updateUserPassword(id: string, password: string): Promise<User> {
+      async updateUserPassword(id: number, password: string): Promise<User> {
             return await this.userRepository.updatePassword(
                   id,
                   password,

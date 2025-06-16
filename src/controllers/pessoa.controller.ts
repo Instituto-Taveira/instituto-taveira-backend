@@ -9,8 +9,10 @@ import {
       Patch,
       Post,
       Query,
+      UseFilters,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { DomainExceptionFilter } from 'src/common/filters/domain-exception.filter';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
@@ -20,7 +22,7 @@ import { PessoaService } from 'src/services/pessoa.service';
 @ApiTags('Pessoa')
 @Controller('api/pessoa')
 export class PessoaController {
-      constructor(private readonly pessoaService: PessoaService) {}
+      constructor(private readonly pessoaService: PessoaService) { }
 
       @ApiOperation({
             summary: 'Criar Pessoa',
@@ -43,8 +45,8 @@ export class PessoaController {
       @Get(':id')
       @IsPublic()
       //   @UseGuards(JwtAuthGuard)
-      async findById(@Param('id') id: string): Promise<Pessoa> {
-            return await this.pessoaService.findById(id);
+      async findById(@Param('id') id: number): Promise<Pessoa> {
+            return await this.pessoaService.findById(Number(id));
       }
 
       @ApiOperation({
@@ -79,8 +81,8 @@ export class PessoaController {
       @Patch(':id')
       @IsPublic()
       //   @UseGuards(JwtAuthGuard)
-      async update(@Param('id') id: string, @Body() payload: CreatePessoaDTO) {
-            await this.pessoaService.update(id, payload);
+      async update(@Param('id') id: number, @Body() payload: CreatePessoaDTO) {
+            await this.pessoaService.update(Number(id), payload);
             return { message: 'Pessoa atualizada com sucesso!' };
       }
 
@@ -92,8 +94,8 @@ export class PessoaController {
       @Delete(':id')
       @IsPublic()
       //   @UseGuards(JwtAuthGuard)
-      async delete(@Param('id') id: string) {
-            await this.pessoaService.delete(id);
+      async delete(@Param('id') id: number) {
+            await this.pessoaService.delete(Number(id));
             return { message: 'Pessoa deletada com sucesso!' };
       }
 }

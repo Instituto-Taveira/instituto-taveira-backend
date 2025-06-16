@@ -1,7 +1,9 @@
 import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { CPFExistsException } from 'src/common/exceptions/cpf-exists.exception';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
+import { CPF } from 'src/entities/cpf.entity';
 import { Pessoa } from 'src/entities/pessoa.entity';
 import IPessoaRepository from 'src/repository/pessoa/pessoa.repository.contract';
 
@@ -10,27 +12,34 @@ export class PessoaService {
       constructor(
             @Inject('IPessoaRepository')
             private readonly pessoaRepository: IPessoaRepository,
-      ) {}
+      ) { }
 
       async create(data: CreatePessoaDTO): Promise<Pessoa> {
             const existPessoa = await this.pessoaRepository.findByCPF(data.cpf);
 
             if (existPessoa) {
-                  throw new HttpException(
-                        'Pessoa com esse CPF já cadastrada!',
-                        400,
-                  );
+                  throw new CPFExistsException();
             }
 
             const pessoa: Pessoa = new Pessoa({
                   ...data,
+                  cpf: new CPF(data.cpf),
                   updatedAt: new Date(),
             });
 
-            return await this.pessoaRepository.create(pessoa);
+            return await this.pessoaRepository.create({
+                  ...pessoa,
+                  cpf: pessoa.cpf.getValue(),
+                  dependentes: pessoa.dependentes
+                        ? pessoa.dependentes.map((dep: any) => ({
+                              ...dep,
+                              tipo: dep.tipo ?? '',
+                        }))
+                        : [],
+            });
       }
 
-      async findById(id: string): Promise<Pessoa> {
+      async findById(id: number): Promise<Pessoa> {
             const pessoa = await this.pessoaRepository.findById(id);
 
             if (!pessoa) {
@@ -46,7 +55,7 @@ export class PessoaService {
             return await this.pessoaRepository.findAll(filters);
       }
 
-      async update(id: string, data: CreatePessoaDTO): Promise<void> {
+      async update(id: number, data: CreatePessoaDTO): Promise<void> {
             const pessoa = await this.pessoaRepository.findById(id);
 
             if (!pessoa) {
@@ -66,7 +75,7 @@ export class PessoaService {
             return;
       }
 
-      async delete(id: string): Promise<void> {
+      async delete(id: number): Promise<void> {
             const pessoa = await this.pessoaRepository.findById(id);
 
             if (!pessoa) {

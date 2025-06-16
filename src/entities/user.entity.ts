@@ -1,20 +1,19 @@
-import { v4 as uuid } from 'uuid';
 import { Role } from './role.entity';
 
 export class User {
-      id: string;
+      id: number;
       name: string;
       login: string;
       password: string;
       isBlocked: boolean;
       isAdm: boolean;
       firstLogin: boolean;
-      role?: Role;
+      role: Role;
       createdAt: Date;
       updatedAt?: Date | null;
 
-      constructor(props: Omit<User, 'id' | 'createdAt'>, id?: string) {
+      constructor(props: Omit<User, 'id' | 'createdAt'>, id?: number) {
             Object.assign(this, props);
-            this.id = id ?? uuid();
+            this.id = id;
       }
 }

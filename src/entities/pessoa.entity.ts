@@ -1,10 +1,10 @@
-import { v4 as uuid } from 'uuid';
+import { CPF } from './cpf.entity';
 
 export class Pessoa {
-      id: string;
+      id: number;
       nome: string;
       dataNascimento: Date;
-      cpf: string;
+      cpf: CPF;
       rg?: string;
       tituloEleitor?: string;
       localVotacao?: string;
@@ -20,15 +20,23 @@ export class Pessoa {
       cidade: string;
       estado: string;
       cep: string;
-      dependenteDeId?: string;
       fotoBase64?: string;
-
       createdAt: Date;
       updatedAt?: Date | null;
+      dependentes?: {
+            nome: string;
+            dataNascimento: Date;
+            cpf?: string;
+            rg?: string;
+            tituloEleitor?: string;
+            localVotacao?: string;
+            cartaoSUS?: string;
+            numeroContato?: string;
+      }[];
 
-      constructor(props: Omit<Pessoa, 'id' | 'createdAt'>, id?: string) {
+      constructor(props: Omit<Pessoa, 'id' | 'createdAt'>, id?: number) {
             Object.assign(this, props);
-            this.id = id ?? uuid();
+            this.id = id;
             this.createdAt = new Date();
       }
 }

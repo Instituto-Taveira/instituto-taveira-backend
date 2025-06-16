@@ -4,12 +4,12 @@ import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 
 export default interface IPessoaRepository {
-      create(data: Pessoa): Promise<Pessoa>;
-      findById(id: string): Promise<Pessoa | null>;
+      create(data: CreatePessoaDTO): Promise<Pessoa>;
+      findById(id: number): Promise<Pessoa | null>;
       findByCPF(cpf: string): Promise<Pessoa | null>;
       findAll(
             filters?: FiltersPessoaDTO,
       ): Promise<PaginatedResult<Partial<Pessoa>>>;
-      update(id: string, data: CreatePessoaDTO): Promise<Pessoa>;
-      delete(id: string): Promise<void>;
+      update(id: number, data: CreatePessoaDTO): Promise<Pessoa>;
+      delete(id: number): Promise<void>;
 }

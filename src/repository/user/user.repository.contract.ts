@@ -6,11 +6,11 @@ export default interface IUserRepository {
       findByLogin(login: string): Promise<User>;
       create(data: User): Promise<User>;
       findAll(): Promise<Partial<User>[]>;
-      findById(id: string): Promise<User>;
-      update(id: string, data: CreateUserDTO): Promise<User>;
-      delete(id: string): Promise<void>;
+      findById(id: number): Promise<User>;
+      update(id: number, data: CreateUserDTO): Promise<User>;
+      delete(id: number): Promise<void>;
       updatePassword(
-            id: string,
+            id: number,
             password: string,
             firstLogin: boolean,
       ): Promise<User>;
