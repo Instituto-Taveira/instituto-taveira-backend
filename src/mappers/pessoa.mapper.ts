@@ -68,8 +68,15 @@ export class PessoaMapper {
                     if (dep.localVotacao) d.localVotacao = dep.localVotacao;
                     if (dep.cartaoSUS) d.cartaoSUS = dep.cartaoSUS;
                     if (dep.numeroContato) d.numeroContato = dep.numeroContato;
+                    if (dep.whatsapp) d.whatsapp = dep.whatsapp;
                     if (dep.fotoBase64) d.fotoBase64 = dep.fotoBase64;
                     if (dep.tipo) d.tipo = dep.tipo;
+                    if (dep.cep) d.cep = dep.cep;
+                    if (dep.rua) d.rua = dep.rua;
+                    if (dep.numero) d.numero = dep.numero;
+                    if (dep.bairro) d.bairro = dep.bairro;
+                    if (dep.cidade) d.cidade = dep.cidade;
+                    if (dep.estado) d.estado = dep.estado;
 
                     return d;
                 }),
@@ -80,7 +87,6 @@ export class PessoaMapper {
     }
 
     static toPrismaUpdate(dto: UpdatePessoaDTO) {
-        // campos básicos (sem nested)
         const pessoaData: any = {
             nome: dto.nome,
             dataNascimento: dto.dataNascimento,
@@ -114,8 +120,15 @@ export class PessoaMapper {
                 localVotacao: dep.localVotacao,
                 cartaoSUS: dep.cartaoSUS,
                 numeroContato: dep.numeroContato,
+                whatsapp: dep.whatsapp,
                 fotoBase64: dep.fotoBase64,
                 tipo: dep.tipo,
+                cep: dep.cep,
+                rua: dep.rua,
+                numero: dep.numero,
+                bairro: dep.bairro,
+                cidade: dep.cidade,
+                estado: dep.estado,
             })) ?? []
         };
     }

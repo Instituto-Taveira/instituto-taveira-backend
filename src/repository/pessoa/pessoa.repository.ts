@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/config/database/prisma.service';
 import { Pessoa } from 'src/entities/pessoa.entity';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
@@ -24,6 +24,51 @@ export class PessoaRepository implements IPessoaRepository {
 
             return PessoaMapper.toDomain(created);
       }
+
+      async findBirthDays(): Promise<{ pessoas: any[]; dependentes: any[] }> {
+            const now = new Date();
+            const currentMonth = now.getMonth(); // 0 = janeiro, …, 11 = dezembro
+
+            const [allPessoas, allDependentes] = await Promise.all([
+                  this.repository.pessoa.findMany({
+                        select: {
+                              id: true,
+                              nome: true,
+                              dataNascimento: true,
+                              whatsapp: true,
+                              fotoBase64: true,
+                        },
+                  }),
+                  this.repository.dependente.findMany({
+                        select: {
+                              id: true,
+                              nome: true,
+                              dataNascimento: true,
+                              fotoBase64: true,
+                              whatsapp: true,
+                              pessoaId: true,
+                        },
+                  }),
+            ]);
+
+            const pessoas = allPessoas
+                  .filter(p => p.dataNascimento.getMonth() === currentMonth)
+                  .sort((a, b) =>
+                        a.dataNascimento.getDate() - b.dataNascimento.getDate()
+                  );
+
+            const dependentes = allDependentes
+                  .filter(d => d.dataNascimento.getMonth() === currentMonth)
+                  .sort((a, b) =>
+                        a.dataNascimento.getDate() - b.dataNascimento.getDate()
+                  );
+
+            console.log('Pessoas Aniversariantes:', pessoas);
+            console.log('Dependentes Aniversariantes:', dependentes);
+
+            return { pessoas, dependentes };
+      }
+
 
       async findById(id: number): Promise<Pessoa | null> {
 
@@ -64,7 +109,14 @@ export class PessoaRepository implements IPessoaRepository {
                                     tituloEleitor: true,
                                     localVotacao: true,
                                     cartaoSUS: true,
+                                    bairro: true,
+                                    cidade: true,
+                                    estado: true,
+                                    cep: true,
+                                    rua: true,
+                                    numero: true,
                                     numeroContato: true,
+                                    whatsapp: true,
                                     createdAt: true,
                                     updatedAt: true,
                               },
@@ -99,6 +151,9 @@ export class PessoaRepository implements IPessoaRepository {
                   complemento: foundById.complemento,
                   pontoReferencia: foundById.pontoReferencia,
                   fotoBase64: foundById.fotoBase64,
+                  localVotacao: foundById.localVotacao,
+                  tituloEleitor: foundById.tituloEleitor,
+                  cartaoSUS: foundById.cartaoSUS,
                   dependentes: foundById.Dependente.map(dep => ({
                         id: dep.id,
                         tipo: dep.tipo,
@@ -109,7 +164,14 @@ export class PessoaRepository implements IPessoaRepository {
                         tituloEleitor: dep.tituloEleitor,
                         localVotacao: dep.localVotacao,
                         cartaoSUS: dep.cartaoSUS,
+                        bairro: dep.bairro,
+                        cidade: dep.cidade,
+                        estado: dep.estado,
+                        cep: dep.cep,
+                        rua: dep.rua,
+                        numero: dep.numero,
                         numeroContato: dep.numeroContato,
+                        whatsapp: dep.whatsapp,
                         fotoBase64: dep.fotoBase64,
                   })),
             });
@@ -166,7 +228,16 @@ export class PessoaRepository implements IPessoaRepository {
                                     tituloEleitor: true,
                                     localVotacao: true,
                                     cartaoSUS: true,
+                                    bairro: true,
+                                    cidade: true,
+                                    estado: true,
+                                    cep: true,
+                                    rua: true,
+                                    numero: true,
+                                    createdAt: true,
+                                    updatedAt: true,
                                     numeroContato: true,
+                                    whatsapp: true,
                               },
                               orderBy: {
                                     createdAt: 'desc',
@@ -205,7 +276,15 @@ export class PessoaRepository implements IPessoaRepository {
                               tituloEleitor: dep.tituloEleitor,
                               localVotacao: dep.localVotacao,
                               cartaoSUS: dep.cartaoSUS,
+                              cep: dep.cep,
+                              rua: dep.rua,
+                              numero: dep.numero,
+                              bairro: dep.bairro,
+                              cidade: dep.cidade,
+                              estado: dep.estado,
+                              tipo: dep.tipo,
                               numeroContato: dep.numeroContato,
+                              whatsapp: dep.whatsapp,
                               fotoBase64: dep.fotoBase64,
                         })),
                   });
@@ -230,32 +309,18 @@ export class PessoaRepository implements IPessoaRepository {
       async update(id: number, data: UpdatePessoaDTO): Promise<Pessoa> {
             const { userFields, dependentes } = PessoaMapper.toPrismaUpdate(data);
 
-            const novos = dependentes.filter(d => !d.id);
-            const existentes = dependentes.filter(d => !!d.id);
+            await this.repository.dependente.deleteMany({
+                  where: { pessoaId: id },
+            });
 
             const updated = await this.repository.pessoa.update({
                   where: { id },
                   data: {
                         ...userFields,
                         Dependente: {
-                              // atualiza quem já existia
-                              update: existentes.map(dep => ({
-                                    where: { id: dep.id! },
-                                    data: {
-                                          nome: dep.nome,
-                                          dataNascimento: dep.dataNascimento, // já é Date
-                                          cpf: dep.cpf,
-                                          rg: dep.rg,
-                                          fotoBase64: dep.fotoBase64,
-                                          tituloEleitor: dep.tituloEleitor,
-                                          localVotacao: dep.localVotacao,
-                                          cartaoSUS: dep.cartaoSUS,
-                                          numeroContato: dep.numeroContato,
-                                    }
-                              })),
-                              create: novos.map(dep => ({
+                              create: dependentes.map(dep => ({
                                     nome: dep.nome,
-                                    dataNascimento: dep.dataNascimento, // já é Date
+                                    dataNascimento: dep.dataNascimento,
                                     cpf: dep.cpf,
                                     rg: dep.rg,
                                     fotoBase64: dep.fotoBase64,
@@ -263,6 +328,7 @@ export class PessoaRepository implements IPessoaRepository {
                                     localVotacao: dep.localVotacao,
                                     cartaoSUS: dep.cartaoSUS,
                                     numeroContato: dep.numeroContato,
+                                    whatsapp: dep.whatsapp,
                               })),
                         }
                   },
@@ -277,4 +343,48 @@ export class PessoaRepository implements IPessoaRepository {
                   where: { id },
             });
       }
+
+      async createBulk(data: CreatePessoaDTO[]): Promise<Pessoa[]> {
+            const pessoasScalars = data.map(PessoaMapper.toPrismaCreate)
+                  .map(({ Dependente, ...scalars }) => scalars);
+            await this.repository.pessoa.createMany({
+                  data: pessoasScalars,
+                  skipDuplicates: true,
+            });
+
+            const inseridas = await this.repository.pessoa.findMany({
+                  where: { cpf: { in: data.map(d => d.cpf) } },
+                  select: { id: true, cpf: true },
+            });
+
+            const dependentesData = data.flatMap(dto => {
+                  const pessoa = inseridas.find(p => p.cpf === dto.cpf);
+                  if (!pessoa || !dto.dependentes) return [];
+
+                  return dto.dependentes.map(dep => ({
+                        nome: dep.nome,
+                        dataNascimento: new Date(dep.dataNascimento),
+                        cpf: dep.cpf,
+                        rg: dep.rg,
+                        tituloEleitor: dep.tituloEleitor,
+                        cartaoSUS: dep.cartaoSUS,
+                        numeroContato: dep.numeroContato,
+                        whatsapp: dep.whatsapp,
+                        pessoaId: pessoa.id,
+                  }));
+            });
+
+            if (dependentesData.length) {
+                  await this.repository.dependente.createMany({
+                        data: dependentesData,
+                        skipDuplicates: true,
+                  });
+            }
+
+            return this.repository.pessoa.findMany({
+                  where: { id: { in: inseridas.map(p => p.id) } },
+                  include: { Dependente: true },
+            }).then(rows => rows.map(PessoaMapper.toDomain));
+      }
+
 }

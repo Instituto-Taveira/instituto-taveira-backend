@@ -2,12 +2,12 @@ export class CPF {
     private readonly value: string;
 
     constructor(cpf: string) {
-        const cleaned = cpf.replace(/[^\d]/g, '');
-        if (!CPF.isValid(cleaned)) {
-            throw new Error('CPF inválido');
-        }
+        // const cleaned = cpf.replace(/[^\d]/g, '');
+        // if (!CPF.isValid(cleaned)) {
+        //     throw new Error('CPF inválido');
+        // }
 
-        this.value = CPF.format(cleaned);
+        this.value = CPF.format(cpf);
     }
 
     public getValue() {
@@ -33,6 +33,6 @@ export class CPF {
     }
 
     static format(cpf: string): string {
-        return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        return cpf
     }
 }

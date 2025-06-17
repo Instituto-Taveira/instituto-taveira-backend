@@ -61,13 +61,20 @@ model Dependente {
   nome           String
   dataNascimento DateTime
   tipo           String   @default("")
-  cpf            String?  @unique
+  cpf            String?
   rg             String?
   tituloEleitor  String?
   localVotacao   String?
   cartaoSUS      String?
   numeroContato  String?
+  whatsapp       String?
   fotoBase64     String?
+  cep            String?
+  rua            String?
+  numero         String?
+  bairro         String?
+  cidade         String?
+  estado         String?
   pessoaId       Int
   pessoa         Pessoa   @relation(fields: [pessoaId], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())

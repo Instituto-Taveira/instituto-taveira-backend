@@ -8,7 +8,14 @@ export interface CreateDependenteDTO {
       fotoBase64?: string;
       cpf?: string;
       rg?: string;
+      cep?: string;
+      rua?: string;
+      numero?: string;
+      bairro?: string;
+      cidade?: string;
+      estado?: string;
       numeroContato?: string;
+      whatsapp?: string;
       tituloEleitor?: string;
       localVotacao?: string;
       cartaoSUS?: string;
@@ -21,7 +28,14 @@ export interface UpdateDependenteDTO {
       dataNascimento: Date;
       cpf?: string;
       rg?: string;
+      cep?: string;
+      rua?: string;
+      numero?: string;
+      bairro?: string;
+      cidade?: string;
+      estado?: string;
       numeroContato?: string;
+      whatsapp?: string;
       tituloEleitor?: string;
       localVotacao?: string;
       cartaoSUS?: string;
@@ -121,4 +135,5 @@ export class CreatePessoaDTO {
       @IsOptional()
       @IsString()
       fotoBase64?: string;
+      id: any;
 }

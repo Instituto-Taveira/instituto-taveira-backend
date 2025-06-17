@@ -15,11 +15,11 @@ export class PessoaService {
       ) { }
 
       async create(data: CreatePessoaDTO): Promise<Pessoa> {
-            const existPessoa = await this.pessoaRepository.findByCPF(data.cpf);
+            // const existPessoa = await this.pessoaRepository.findByCPF(data.cpf);
 
-            if (existPessoa) {
-                  throw new CPFExistsException();
-            }
+            // if (existPessoa) {
+            //       throw new CPFExistsException();
+            // }
 
             const pessoa: Pessoa = new Pessoa({
                   ...data,
@@ -53,6 +53,10 @@ export class PessoaService {
             }
 
             return pessoa;
+      }
+
+      async findBirthDays(): Promise<{ pessoas: any[]; dependentes: any[] }> {
+            return await this.pessoaRepository.findBirthDays();
       }
 
       async findAll(
@@ -91,4 +95,33 @@ export class PessoaService {
             await this.pessoaRepository.delete(id);
             return;
       }
+
+      async createBulk(data: CreatePessoaDTO[]): Promise<Pessoa[]> {
+            const pessoas: Pessoa[] = data.map(dto => new Pessoa({
+                  ...dto,
+                  cpf: new CPF(dto.cpf),
+                  updatedAt: new Date(),
+                  dependentes: dto.dependentes
+                        ? dto.dependentes.map((dep: any) => ({
+                              ...dep,
+                              foto: dep.foto ?? '',
+                        }))
+                        : [],
+            }));
+
+            const pessoasDTO: CreatePessoaDTO[] = pessoas.map(pessoa => ({
+                  ...data.find(dto => dto.cpf === pessoa.cpf.getValue()),
+                  ...pessoa,
+                  cpf: pessoa.cpf.getValue(),
+                  dependentes: pessoa.dependentes
+                        ? pessoa.dependentes.map((dep: any) => ({
+                              ...dep,
+                              tipo: dep.tipo ?? '',
+                        }))
+                        : [],
+            }));
+
+            return await this.pessoaRepository.createBulk(pessoasDTO);
+      }
+
 }

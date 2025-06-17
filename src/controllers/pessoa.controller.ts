@@ -24,6 +24,13 @@ import { PessoaService } from 'src/services/pessoa.service';
 export class PessoaController {
       constructor(private readonly pessoaService: PessoaService) { }
 
+      @Get('birthdays')
+      @IsPublic()
+      @UseFilters(new DomainExceptionFilter())
+      async findBirthDays(): Promise<{ pessoas: any[]; dependentes: any[] }> {
+            return this.pessoaService.findBirthDays();
+      }
+
       @ApiOperation({
             summary: 'Criar Pessoa',
             description:
@@ -73,6 +80,9 @@ export class PessoaController {
             return this.pessoaService.findAll(filters);
       }
 
+      
+
+
       @ApiOperation({
             summary: 'Atualizar Pessoa',
             description:
@@ -98,4 +108,10 @@ export class PessoaController {
             await this.pessoaService.delete(Number(id));
             return { message: 'Pessoa deletada com sucesso!' };
       }
+
+      @Post('bulk')
+      bulkCreate(@Body() users: CreatePessoaDTO[]) {
+            return this.pessoaService.createBulk(users);
+      }
+
 }
