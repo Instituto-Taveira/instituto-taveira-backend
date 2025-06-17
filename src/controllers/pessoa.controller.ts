@@ -109,6 +109,13 @@ export class PessoaController {
             return { message: 'Pessoa deletada com sucesso!' };
       }
 
+      @IsPublic()
+      @ApiOperation({
+            summary: 'Criar Várias Pessoas',
+            description:
+                  'Utilize este endpoint para cadastrar várias pessoas de uma vez.',
+      })
+      @HttpCode(HttpStatus.CREATED)
       @Post('bulk')
       bulkCreate(@Body() users: CreatePessoaDTO[]) {
             return this.pessoaService.createBulk(users);

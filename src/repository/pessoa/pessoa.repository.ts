@@ -16,6 +16,16 @@ export class PessoaRepository implements IPessoaRepository {
 
       async create(data: CreatePessoaDTO): Promise<Pessoa> {
 
+            const existingPessoa = await this.repository.pessoa.findUnique({
+                  where: { cpf: data.cpf },
+            });
+
+            if (existingPessoa) {
+                  throw new Error(
+                        'Já existe uma pessoa cadastrada com este CPF.'
+                  );
+            }
+
             const dataMapper = PessoaMapper.toPrismaCreate(data);
             const created = await this.repository.pessoa.create({
                   data: dataMapper,
@@ -62,9 +72,6 @@ export class PessoaRepository implements IPessoaRepository {
                   .sort((a, b) =>
                         a.dataNascimento.getDate() - b.dataNascimento.getDate()
                   );
-
-            console.log('Pessoas Aniversariantes:', pessoas);
-            console.log('Dependentes Aniversariantes:', dependentes);
 
             return { pessoas, dependentes };
       }
@@ -250,7 +257,7 @@ export class PessoaRepository implements IPessoaRepository {
                         },
                   },
                   orderBy: {
-                        createdAt: 'desc',
+                        nome: 'asc'
                   },
                   skip: skip,
                   take: limit,
