@@ -6,8 +6,9 @@ import IPessoaRepository from './pessoa.repository.contract';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { generateQueryByFiltersForPessoa } from 'src/config/database/Queries';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
-import { PessoaMapper } from 'src/mapper/pessoa.mapper';
+import { PessoaMapper } from 'src/mappers/pessoa.mapper';
 import { CPF } from 'src/entities/cpf.entity';
+import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
 
 @Injectable()
 export class PessoaRepository implements IPessoaRepository {
@@ -54,8 +55,10 @@ export class PessoaRepository implements IPessoaRepository {
                         Dependente: {
                               select: {
                                     id: true,
+                                    tipo: true,
                                     nome: true,
                                     dataNascimento: true,
+                                    fotoBase64: true,
                                     cpf: true,
                                     rg: true,
                                     tituloEleitor: true,
@@ -98,6 +101,7 @@ export class PessoaRepository implements IPessoaRepository {
                   fotoBase64: foundById.fotoBase64,
                   dependentes: foundById.Dependente.map(dep => ({
                         id: dep.id,
+                        tipo: dep.tipo,
                         nome: dep.nome,
                         dataNascimento: dep.dataNascimento,
                         cpf: dep.cpf,
@@ -106,6 +110,7 @@ export class PessoaRepository implements IPessoaRepository {
                         localVotacao: dep.localVotacao,
                         cartaoSUS: dep.cartaoSUS,
                         numeroContato: dep.numeroContato,
+                        fotoBase64: dep.fotoBase64,
                   })),
             });
 
@@ -152,10 +157,12 @@ export class PessoaRepository implements IPessoaRepository {
                         Dependente: {
                               select: {
                                     id: true,
+                                    tipo: true,
                                     nome: true,
                                     dataNascimento: true,
                                     cpf: true,
                                     rg: true,
+                                    fotoBase64: true,
                                     tituloEleitor: true,
                                     localVotacao: true,
                                     cartaoSUS: true,
@@ -199,6 +206,7 @@ export class PessoaRepository implements IPessoaRepository {
                               localVotacao: dep.localVotacao,
                               cartaoSUS: dep.cartaoSUS,
                               numeroContato: dep.numeroContato,
+                              fotoBase64: dep.fotoBase64,
                         })),
                   });
 
@@ -219,57 +227,44 @@ export class PessoaRepository implements IPessoaRepository {
             };
       }
 
-      async update(id: number, data: CreatePessoaDTO): Promise<Pessoa> {
+      async update(id: number, data: UpdatePessoaDTO): Promise<Pessoa> {
+            const { userFields, dependentes } = PessoaMapper.toPrismaUpdate(data);
+
+            const novos = dependentes.filter(d => !d.id);
+            const existentes = dependentes.filter(d => !!d.id);
+
             const updated = await this.repository.pessoa.update({
                   where: { id },
                   data: {
-                        nome: data.nome,
-                        dataNascimento: data.dataNascimento,
-                        cpf: data.cpf,
-                        rg: data.rg,
-                        tituloEleitor: data.tituloEleitor,
-                        localVotacao: data.localVotacao,
-                        cartaoSUS: data.cartaoSUS,
-                        numeroContato: data.numeroContato,
-                        whatsapp: data.whatsapp,
-                        endereco: data.endereco,
-                        rua: data.rua,
-                        numero: data.numero,
-                        bairro: data.bairro,
-                        complemento: data.complemento,
-                        pontoReferencia: data.pontoReferencia,
-                        cidade: data.cidade,
-                        estado: data.estado,
-                        cep: data.cep,
-                        fotoBase64: data.fotoBase64,
-                        updatedAt: new Date(),
+                        ...userFields,
                         Dependente: {
-                              updateMany: data.dependentes?.map(dep => ({
-                                    where: { id: dep.id },
+                              // atualiza quem já existia
+                              update: existentes.map(dep => ({
+                                    where: { id: dep.id! },
                                     data: {
                                           nome: dep.nome,
-                                          dataNascimento: dep.dataNascimento,
+                                          dataNascimento: dep.dataNascimento, // já é Date
                                           cpf: dep.cpf,
                                           rg: dep.rg,
+                                          fotoBase64: dep.fotoBase64,
                                           tituloEleitor: dep.tituloEleitor,
                                           localVotacao: dep.localVotacao,
                                           cartaoSUS: dep.cartaoSUS,
                                           numeroContato: dep.numeroContato,
-                                    },
-                              })) || [],
-                              createMany: {
-                                    data: data.dependentes?.map(dep => ({
-                                          nome: dep.nome,
-                                          dataNascimento: dep.dataNascimento,
-                                          cpf: dep.cpf,
-                                          rg: dep.rg,
-                                          tituloEleitor: dep.tituloEleitor,
-                                          localVotacao: dep.localVotacao,
-                                          cartaoSUS: dep.cartaoSUS,
-                                          numeroContato: dep.numeroContato,
-                                    })) || [],
-                              },
-                        },
+                                    }
+                              })),
+                              create: novos.map(dep => ({
+                                    nome: dep.nome,
+                                    dataNascimento: dep.dataNascimento, // já é Date
+                                    cpf: dep.cpf,
+                                    rg: dep.rg,
+                                    fotoBase64: dep.fotoBase64,
+                                    tituloEleitor: dep.tituloEleitor,
+                                    localVotacao: dep.localVotacao,
+                                    cartaoSUS: dep.cartaoSUS,
+                                    numeroContato: dep.numeroContato,
+                              })),
+                        }
                   },
                   include: { Dependente: true }
             });

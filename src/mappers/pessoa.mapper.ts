@@ -4,6 +4,7 @@ import { Pessoa as PrismaPessoa } from '@prisma/client';
 import { Pessoa } from '../entities/pessoa.entity';
 import { CPF } from '../entities/cpf.entity';
 import { CreateDependenteDTO, CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
+import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
 
 export class PessoaMapper {
     static toDomain(prisma: PrismaPessoa): Pessoa {
@@ -67,13 +68,56 @@ export class PessoaMapper {
                     if (dep.localVotacao) d.localVotacao = dep.localVotacao;
                     if (dep.cartaoSUS) d.cartaoSUS = dep.cartaoSUS;
                     if (dep.numeroContato) d.numeroContato = dep.numeroContato;
+                    if (dep.fotoBase64) d.fotoBase64 = dep.fotoBase64;
+                    if (dep.tipo) d.tipo = dep.tipo;
 
                     return d;
                 }),
             };
-
-            return pessoaData;
         }
+
+        return pessoaData;
+    }
+
+    static toPrismaUpdate(dto: UpdatePessoaDTO) {
+        // campos básicos (sem nested)
+        const pessoaData: any = {
+            nome: dto.nome,
+            dataNascimento: dto.dataNascimento,
+            cpf: new CPF(dto.cpf).getValue(),
+            rg: dto.rg,
+            tituloEleitor: dto.tituloEleitor,
+            localVotacao: dto.localVotacao,
+            cartaoSUS: dto.cartaoSUS,
+            numeroContato: dto.numeroContato,
+            whatsapp: dto.whatsapp,
+            endereco: dto.endereco,
+            rua: dto.rua,
+            numero: dto.numero,
+            bairro: dto.bairro,
+            complemento: dto.complemento,
+            pontoReferencia: dto.pontoReferencia,
+            cidade: dto.cidade,
+            estado: dto.estado,
+            cep: dto.cep,
+            fotoBase64: dto.fotoBase64,
+        };
+        return {
+            userFields: pessoaData,
+            dependentes: dto.dependentes?.map(dep => ({
+                id: dep.id,
+                nome: dep.nome,
+                dataNascimento: new Date(dep.dataNascimento),
+                cpf: dep.cpf,
+                rg: dep.rg,
+                tituloEleitor: dep.tituloEleitor,
+                localVotacao: dep.localVotacao,
+                cartaoSUS: dep.cartaoSUS,
+                numeroContato: dep.numeroContato,
+                fotoBase64: dep.fotoBase64,
+                tipo: dep.tipo,
+            })) ?? []
+        };
     }
 
     static toHttp(pessoa: Partial<Pessoa>): any {

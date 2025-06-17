@@ -25,6 +25,12 @@ export class PessoaService {
                   ...data,
                   cpf: new CPF(data.cpf),
                   updatedAt: new Date(),
+                  dependentes: data.dependentes
+                        ? data.dependentes.map((dep: any) => ({
+                              ...dep,
+                              foto: dep.foto ?? '',
+                        }))
+                        : [],
             });
 
             return await this.pessoaRepository.create({

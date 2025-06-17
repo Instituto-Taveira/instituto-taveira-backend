@@ -67,6 +67,7 @@ model Dependente {
   localVotacao   String?
   cartaoSUS      String?
   numeroContato  String?
+  fotoBase64     String?
   pessoaId       Int
   pessoa         Pessoa   @relation(fields: [pessoaId], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())

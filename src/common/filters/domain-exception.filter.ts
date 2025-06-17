@@ -15,11 +15,17 @@ export class DomainExceptionFilter implements ExceptionFilter {
         if (exception instanceof HttpException) {
             const status = exception.getStatus();
             const message = exception.getResponse();
+            console.error('HTTP Exception:', {
+                status,
+                message,
+            });
             return response.status(status).json({
                 statusCode: status,
                 message,
             });
         }
+
+        console.error('Unhandled Exception:', exception);
 
         // fallback pra tratar mais erros no futuros...
         return response.status(400).json({

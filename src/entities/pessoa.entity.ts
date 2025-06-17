@@ -26,6 +26,7 @@ export class Pessoa {
       dependentes?: {
             nome: string;
             dataNascimento: Date;
+            fotoBase64: string;
             cpf?: string;
             rg?: string;
             tituloEleitor?: string;

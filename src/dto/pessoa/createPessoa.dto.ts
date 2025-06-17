@@ -2,9 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, Length } from 'class-validator';
 
 export interface CreateDependenteDTO {
-      id: any;
+      id: number;
       nome: string;
       dataNascimento: Date;
+      fotoBase64?: string;
       cpf?: string;
       rg?: string;
       numeroContato?: string;
@@ -12,6 +13,20 @@ export interface CreateDependenteDTO {
       localVotacao?: string;
       cartaoSUS?: string;
       tipo: string;
+}
+
+export interface UpdateDependenteDTO {
+      id: number;
+      nome?: string;
+      dataNascimento: Date;
+      cpf?: string;
+      rg?: string;
+      numeroContato?: string;
+      tituloEleitor?: string;
+      localVotacao?: string;
+      cartaoSUS?: string;
+      fotoBase64?: string;
+      tipo?: string;
 }
 
 
