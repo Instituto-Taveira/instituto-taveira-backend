@@ -9,6 +9,7 @@ import {
       Patch,
       Post,
       Query,
+      Req,
       UseFilters,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -38,10 +39,11 @@ export class PessoaController {
       })
       @Post()
       @IsPublic()
-      // @UseGuards(JwtAuthGuard)
       @UseFilters(new DomainExceptionFilter())
       @HttpCode(HttpStatus.CREATED)
-      async create(@Body() payload: CreatePessoaDTO): Promise<Pessoa> {
+      async create(@Body() payload: CreatePessoaDTO, @Req() req: Request): Promise<Pessoa> {
+            console.log('Creating Pessoa with payload:', payload);
+            console.log('Request headers:', req.body);
             return await this.pessoaService.create(payload);
       }
 

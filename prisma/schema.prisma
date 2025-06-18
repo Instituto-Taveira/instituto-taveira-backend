@@ -36,6 +36,8 @@ model Pessoa {
   cpf             String?  @unique
   rg              String?
   tituloEleitor   String?
+  zona            String?
+  secao           String?
   localVotacao    String?
   cartaoSUS       String?
   numeroContato   String?
@@ -64,6 +66,8 @@ model Dependente {
   cpf            String?
   rg             String?
   tituloEleitor  String?
+  zona           String?
+  secao          String?
   localVotacao   String?
   cartaoSUS      String?
   numeroContato  String?

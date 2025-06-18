@@ -37,6 +37,16 @@ export class UpdatePessoaDTO {
     @ApiProperty({ required: false })
     @IsOptional()
     @IsString()
+    zona?: string;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsString()
+    secao?: string;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsString()
     localVotacao?: string;
 
     @ApiProperty({ required: false })

@@ -21,6 +21,8 @@ export class Pessoa {
       estado: string;
       cep: string;
       fotoBase64?: string;
+      zona?: string;
+      secao?: string;
       createdAt: Date;
       updatedAt?: Date | null;
       dependentes?: {

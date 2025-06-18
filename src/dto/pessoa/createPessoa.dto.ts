@@ -18,6 +18,8 @@ export interface CreateDependenteDTO {
       whatsapp?: string;
       tituloEleitor?: string;
       localVotacao?: string;
+      zona?: string;
+      secao?: string;
       cartaoSUS?: string;
       tipo: string;
 }
@@ -37,6 +39,8 @@ export interface UpdateDependenteDTO {
       numeroContato?: string;
       whatsapp?: string;
       tituloEleitor?: string;
+      zona?: string;
+      secao?: string;
       localVotacao?: string;
       cartaoSUS?: string;
       fotoBase64?: string;
@@ -135,5 +139,12 @@ export class CreatePessoaDTO {
       @IsOptional()
       @IsString()
       fotoBase64?: string;
-      id: any;
+
+      @ApiProperty()
+      @IsString()
+      zona: string;
+
+      @ApiProperty()
+      @IsString()
+      secao: string;
 }

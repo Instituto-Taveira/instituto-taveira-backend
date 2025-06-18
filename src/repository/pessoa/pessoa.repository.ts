@@ -16,16 +16,6 @@ export class PessoaRepository implements IPessoaRepository {
 
       async create(data: CreatePessoaDTO): Promise<Pessoa> {
 
-            const existingPessoa = await this.repository.pessoa.findUnique({
-                  where: { cpf: data.cpf },
-            });
-
-            if (existingPessoa) {
-                  throw new Error(
-                        'Já existe uma pessoa cadastrada com este CPF.'
-                  );
-            }
-
             const dataMapper = PessoaMapper.toPrismaCreate(data);
             const created = await this.repository.pessoa.create({
                   data: dataMapper,
@@ -103,6 +93,8 @@ export class PessoaRepository implements IPessoaRepository {
                         fotoBase64: true,
                         cartaoSUS: true,
                         tituloEleitor: true,
+                        secao: true,
+                        zona: true,
                         localVotacao: true,
                         Dependente: {
                               select: {
@@ -114,6 +106,8 @@ export class PessoaRepository implements IPessoaRepository {
                                     cpf: true,
                                     rg: true,
                                     tituloEleitor: true,
+                                    secao: true,
+                                    zona: true,
                                     localVotacao: true,
                                     cartaoSUS: true,
                                     bairro: true,
@@ -160,6 +154,8 @@ export class PessoaRepository implements IPessoaRepository {
                   fotoBase64: foundById.fotoBase64,
                   localVotacao: foundById.localVotacao,
                   tituloEleitor: foundById.tituloEleitor,
+                  zona: foundById.zona,
+                  secao: foundById.secao,
                   cartaoSUS: foundById.cartaoSUS,
                   dependentes: foundById.Dependente.map(dep => ({
                         id: dep.id,
@@ -169,6 +165,8 @@ export class PessoaRepository implements IPessoaRepository {
                         cpf: dep.cpf,
                         rg: dep.rg,
                         tituloEleitor: dep.tituloEleitor,
+                        zona: dep.zona,
+                        secao: dep.secao,
                         localVotacao: dep.localVotacao,
                         cartaoSUS: dep.cartaoSUS,
                         bairro: dep.bairro,
@@ -222,6 +220,8 @@ export class PessoaRepository implements IPessoaRepository {
                         numeroContato: true,
                         whatsapp: true,
                         dataNascimento: true,
+                        zona: true,
+                        secao: true,
                         cpf: true,
                         rg: true,
                         createdAt: true,
@@ -236,6 +236,8 @@ export class PessoaRepository implements IPessoaRepository {
                                     rg: true,
                                     fotoBase64: true,
                                     tituloEleitor: true,
+                                    zona: true,
+                                    secao: true,
                                     localVotacao: true,
                                     cartaoSUS: true,
                                     bairro: true,
@@ -266,6 +268,8 @@ export class PessoaRepository implements IPessoaRepository {
                         numeroContato: item.numeroContato,
                         whatsapp: item.whatsapp,
                         dataNascimento: item.dataNascimento,
+                        zona: item.zona,
+                        secao: item.secao,
                         cpf: new CPF(item.cpf),
                         rg: item.rg,
                         createdAt: item.createdAt,
@@ -277,6 +281,8 @@ export class PessoaRepository implements IPessoaRepository {
                               cpf: dep.cpf,
                               rg: dep.rg,
                               tituloEleitor: dep.tituloEleitor,
+                              zona: dep.zona,
+                              secao: dep.secao,
                               localVotacao: dep.localVotacao,
                               cartaoSUS: dep.cartaoSUS,
                               cep: dep.cep,
@@ -328,6 +334,8 @@ export class PessoaRepository implements IPessoaRepository {
                                     rg: dep.rg,
                                     fotoBase64: dep.fotoBase64,
                                     tituloEleitor: dep.tituloEleitor,
+                                    zona: dep.zona,
+                                    secao: dep.secao,
                                     localVotacao: dep.localVotacao,
                                     cartaoSUS: dep.cartaoSUS,
                                     numeroContato: dep.numeroContato,

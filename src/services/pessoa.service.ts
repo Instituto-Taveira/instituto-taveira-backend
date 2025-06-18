@@ -15,11 +15,11 @@ export class PessoaService {
       ) { }
 
       async create(data: CreatePessoaDTO): Promise<Pessoa> {
-            // const existPessoa = await this.pessoaRepository.findByCPF(data.cpf);
 
-            // if (existPessoa) {
-            //       throw new CPFExistsException();
-            // }
+            const existPessoa = await this.pessoaRepository.findByCPF(data.cpf);
+            if (existPessoa) {
+                  throw new CPFExistsException();
+            }
 
             const pessoa: Pessoa = new Pessoa({
                   ...data,
@@ -36,6 +36,8 @@ export class PessoaService {
             return await this.pessoaRepository.create({
                   ...pessoa,
                   cpf: pessoa.cpf.getValue(),
+                  zona: pessoa.zona ?? '', // Ensure zona is present
+                  secao: pessoa.secao ?? '', // Ensure secao is present
                   dependentes: pessoa.dependentes
                         ? pessoa.dependentes.map((dep: any) => ({
                               ...dep,

@@ -53,6 +53,8 @@ export class PessoaMapper {
             estado: dto.estado,
             cep: dto.cep,
             fotoBase64: dto.fotoBase64,
+            zona: dto.zona,
+            secao: dto.secao,
         };
 
         if (dto.dependentes?.length) {
@@ -77,6 +79,8 @@ export class PessoaMapper {
                     if (dep.bairro) d.bairro = dep.bairro;
                     if (dep.cidade) d.cidade = dep.cidade;
                     if (dep.estado) d.estado = dep.estado;
+                    if (dep.zona) d.zona = dep.zona;
+                    if (dep.secao) d.secao = dep.secao;
 
                     return d;
                 }),
@@ -107,6 +111,8 @@ export class PessoaMapper {
             estado: dto.estado,
             cep: dto.cep,
             fotoBase64: dto.fotoBase64,
+            zona: dto.zona,
+            secao: dto.secao,
         };
         return {
             userFields: pessoaData,
@@ -129,6 +135,8 @@ export class PessoaMapper {
                 bairro: dep.bairro,
                 cidade: dep.cidade,
                 estado: dep.estado,
+                zona: dep.zona,
+                secao: dep.secao,
             })) ?? []
         };
     }
