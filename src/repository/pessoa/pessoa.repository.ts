@@ -199,18 +199,21 @@ export class PessoaRepository implements IPessoaRepository {
       }
 
       async findAll(
-            filters: FiltersPessoaDTO,
+            filters: Partial<FiltersPessoaDTO> = {},
       ): Promise<PaginatedResult<Partial<Pessoa>>> {
+            // paginação via query params
             const page = parseInt(filters.page || '1', 10);
             const limit = parseInt(filters.limit || '10', 10);
             const skip = (page - 1) * limit;
 
-            const where = generateQueryByFiltersForPessoa(filters);
+            console.log('findAll filters:', filters);
 
-            const total = await this.repository.pessoa.count({
-                  where,
-            });
+            const where = generateQueryByFiltersForPessoa(filters as FiltersPessoaDTO);
 
+            // conta total sem paginação
+            const total = await this.repository.pessoa.count({ where });
+
+            // busca paginada com dependentes
             const rawData = await this.repository.pessoa.findMany({
                   where,
                   select: {
@@ -246,23 +249,16 @@ export class PessoaRepository implements IPessoaRepository {
                                     numeroContato: true,
                                     whatsapp: true,
                               },
-                              orderBy: {
-                                    createdAt: 'desc',
-                              },
+                              orderBy: { createdAt: 'desc' },
                         },
-                        _count: {
-                              select: {
-                                    Dependente: true,
-                              },
-                        },
+                        _count: { select: { Dependente: true } },
                   },
-                  orderBy: {
-                        nome: 'asc'
-                  },
-                  skip: skip,
+                  orderBy: { nome: 'asc' },
+                  skip,
                   take: limit,
             });
 
+            // mapeia para o formato HTTP
             const data = rawData.map(item => {
                   const pessoaHttp = PessoaMapper.toHttp({
                         id: item.id,

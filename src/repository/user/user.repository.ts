@@ -63,22 +63,26 @@ export class UserRepository implements IUserRepository {
       }
 
       async update(id: number, data: CreateUserDTO): Promise<User> {
-            const updatedUser = await this.repository.user.update({
+
+            const role = await this.repository.role.findFirst({
+                  where: {
+                        name: data.role,
+                  },
+                  select: {
+                        id: true,
+                  }
+            })
+
+            await this.repository.user.update({
                   where: { id },
                   data: {
                         name: data.name,
                         login: data.login,
-                  },
-                  include: {
-                        role: true,
-                  },
+                        roleId: role.id,
+                  }
             });
 
-            // Map Prisma user to your User entity if needed
-            return {
-                  ...updatedUser,
-                  role: updatedUser.role,
-            } as User;
+            return undefined;
       }
 
       async findById(id: number): Promise<User> {

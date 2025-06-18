@@ -9,4 +9,6 @@ export class FiltersPessoaDTO {
       whatsapp?: string;
       page?: string;
       limit?: string;
+      initialDate?: string; // formato ISO
+      finalDate?: string; // formato ISO
 }

@@ -39,6 +39,7 @@ export class PessoaController {
       @Post()
       @IsPublic()
       // @UseGuards(JwtAuthGuard)
+      @UseFilters(new DomainExceptionFilter())
       @HttpCode(HttpStatus.CREATED)
       async create(@Body() payload: CreatePessoaDTO): Promise<Pessoa> {
             return await this.pessoaService.create(payload);
@@ -79,9 +80,6 @@ export class PessoaController {
       async findAll(@Query() filters?: FiltersPessoaDTO) {
             return this.pessoaService.findAll(filters);
       }
-
-      
-
 
       @ApiOperation({
             summary: 'Atualizar Pessoa',
