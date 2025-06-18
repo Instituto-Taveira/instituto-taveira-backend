@@ -8,6 +8,17 @@ pipeline {
                 }
             }
         }
+        
+        stage('Deploy Instituto API - Stop and Remove Container') {
+            steps {
+                script {
+                    def containerName = 'instituto-api'
+
+                    sh "docker stop ${containerName} || true"
+                    sh "docker rm ${containerName} || true"
+                }
+            }
+        }
 
 
         stage('Deploy instituto API - Run New Container') {
