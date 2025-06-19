@@ -27,7 +27,7 @@ pipeline {
                     def imageName = "instituto/instituto-api:${env.BUILD_ID}"
                     def containerName = 'instituto-api'
 
-                    sh "docker run -d --name ${containerName} -p 3002:3002 ${imageName}"
+                    sh "docker run -d --name ${containerName} -p 3011:3011 ${imageName}"
                 }
             }
         }
