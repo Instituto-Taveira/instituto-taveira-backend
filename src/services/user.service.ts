@@ -37,7 +37,7 @@ export class UserService {
                   isAdm: false,
                   updatedAt: new Date(),
                   firstLogin: true,
-                  password: '123456',
+                  password: data.password,
             });
             return await this.userRepository.create(user);
       }
