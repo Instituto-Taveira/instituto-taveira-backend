@@ -9,7 +9,7 @@ export class UserRepository implements IUserRepository {
       constructor(private readonly repository: PrismaService) { }
 
       async create(data: User): Promise<User> {
-            const createdUser = await this.repository.user.create({
+            const createdUser = await this.repository.usuario.create({
                   data: {
                         name: data.name,
                         login: data.login,
@@ -35,7 +35,7 @@ export class UserRepository implements IUserRepository {
       }
 
       async findByLogin(login: string): Promise<User> {
-            return await this.repository.user.findUnique({
+            return await this.repository.usuario.findUnique({
                   where: { login },
                   include: {
                         role: true,
@@ -44,7 +44,7 @@ export class UserRepository implements IUserRepository {
       }
 
       async findAll(): Promise<Partial<User>[]> {
-            return await this.repository.user.findMany({
+            return await this.repository.usuario.findMany({
                   select: {
                         id: true,
                         name: true,
@@ -73,7 +73,7 @@ export class UserRepository implements IUserRepository {
                   }
             })
 
-            await this.repository.user.update({
+            await this.repository.usuario.update({
                   where: { id },
                   data: {
                         name: data.name,
@@ -86,7 +86,7 @@ export class UserRepository implements IUserRepository {
       }
 
       async findById(id: number): Promise<User> {
-            return await this.repository.user.findUnique({
+            return await this.repository.usuario.findUnique({
                   where: { id },
                   include: {
                         role: true,
@@ -95,7 +95,7 @@ export class UserRepository implements IUserRepository {
       }
 
       async delete(id: number): Promise<void> {
-            await this.repository.user.delete({
+            await this.repository.titular.delete({
                   where: { id },
             });
       }
@@ -105,7 +105,7 @@ export class UserRepository implements IUserRepository {
             password: string,
             firstLogin: boolean,
       ): Promise<User> {
-            return await this.repository.user.update({
+            return await this.repository.usuario.update({
                   where: { id },
                   data: {
                         password,
@@ -119,7 +119,7 @@ export class UserRepository implements IUserRepository {
       }
 
       async findAllAttendants(): Promise<Partial<User>[]> {
-            return await this.repository.user.findMany({
+            return await this.repository.usuario.findMany({
                   where: {
                         isAdm: false,
                   },

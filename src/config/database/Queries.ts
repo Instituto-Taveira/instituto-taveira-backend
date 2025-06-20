@@ -3,8 +3,8 @@ import { Prisma } from '@prisma/client';
 
 export function generateQueryByFiltersForPessoa(
       filters: FiltersPessoaDTO,
-): Prisma.PessoaWhereInput {
-      const orFilters: Prisma.PessoaWhereInput[] = [];
+): Prisma.TitularWhereInput {
+      const orFilters: Prisma.TitularWhereInput[] = [];
 
       if (filters.nome) {
             orFilters.push(
@@ -24,24 +24,6 @@ export function generateQueryByFiltersForPessoa(
                   { Dependente: { some: { rg: { contains: filters.rg, mode: 'insensitive' } } } }
             );
       }
-      if (filters.cidade) {
-            orFilters.push(
-                  { cidade: { contains: filters.cidade, mode: 'insensitive' } },
-                  { Dependente: { some: { cidade: { contains: filters.cidade, mode: 'insensitive' } } } }
-            );
-      }
-      if (filters.bairro) {
-            orFilters.push(
-                  { bairro: { contains: filters.bairro, mode: 'insensitive' } },
-                  { Dependente: { some: { bairro: { contains: filters.bairro, mode: 'insensitive' } } } }
-            );
-      }
-      if (filters.estado) {
-            orFilters.push(
-                  { estado: { contains: filters.estado, mode: 'insensitive' } },
-                  { Dependente: { some: { estado: { contains: filters.estado, mode: 'insensitive' } } } }
-            );
-      }
       if (filters.whatsapp) {
             orFilters.push(
                   { whatsapp: { contains: filters.whatsapp, mode: 'insensitive' } },
@@ -49,7 +31,7 @@ export function generateQueryByFiltersForPessoa(
             );
       }
 
-      const query: Prisma.PessoaWhereInput = {};
+      const query: Prisma.TitularWhereInput = {};
       if (orFilters.length > 0) {
             query.OR = orFilters;
       }

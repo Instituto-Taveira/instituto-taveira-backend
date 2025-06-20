@@ -17,7 +17,8 @@ import { DomainExceptionFilter } from 'src/common/filters/domain-exception.filte
 import { IsPublic } from 'src/decorators/public.decorator';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
-import { Pessoa } from 'src/entities/pessoa.entity';
+import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
+import { Titular } from 'src/entities/titular.entity';
 import { PessoaService } from 'src/services/pessoa.service';
 
 @ApiTags('Pessoa')
@@ -28,7 +29,7 @@ export class PessoaController {
       @Get('birthdays')
       @IsPublic()
       @UseFilters(new DomainExceptionFilter())
-      async findBirthDays(): Promise<{ pessoas: any[]; dependentes: any[] }> {
+      async findBirthDays(): Promise<{ pessoas: Titular[]; dependentes: any[] }> {
             return this.pessoaService.findBirthDays();
       }
 
@@ -41,9 +42,7 @@ export class PessoaController {
       @IsPublic()
       @UseFilters(new DomainExceptionFilter())
       @HttpCode(HttpStatus.CREATED)
-      async create(@Body() payload: CreatePessoaDTO, @Req() req: Request): Promise<Pessoa> {
-            console.log('Creating Pessoa with payload:', payload);
-            console.log('Request headers:', req.body);
+      async create(@Body() payload: CreatePessoaDTO): Promise<Titular> {
             return await this.pessoaService.create(payload);
       }
 
@@ -55,7 +54,7 @@ export class PessoaController {
       @Get(':id')
       @IsPublic()
       //   @UseGuards(JwtAuthGuard)
-      async findById(@Param('id') id: number): Promise<Pessoa> {
+      async findById(@Param('id') id: number): Promise<Titular> {
             return await this.pessoaService.findById(Number(id));
       }
 
@@ -91,7 +90,7 @@ export class PessoaController {
       @Patch(':id')
       @IsPublic()
       //   @UseGuards(JwtAuthGuard)
-      async update(@Param('id') id: number, @Body() payload: CreatePessoaDTO) {
+      async update(@Param('id') id: number, @Body() payload: UpdatePessoaDTO) {
             await this.pessoaService.update(Number(id), payload);
             return { message: 'Pessoa atualizada com sucesso!' };
       }

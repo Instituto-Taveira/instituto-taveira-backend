@@ -7,7 +7,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
+model Usuario {
   id         Int       @id @default(autoincrement())
   name       String
   login      String    @unique
@@ -19,31 +19,62 @@ model User {
   role       Role?     @relation(fields: [roleId], references: [id])
   roleId     Int?
   updatedAt  DateTime?
+
+  @@map("users")
 }
 
-model Role {
-  id        Int       @id @default(autoincrement())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
-  User      User[]
+model Titular {
+  id                Int                 @id @default(autoincrement())
+  nome              String
+  dataNascimento    DateTime
+  cpf               String?             @unique
+  rg                String?
+  tituloEleitor     String?
+  zona              String?
+  secao             String?
+  localVotacao      String?
+  cartaoSUS         String?
+  numeroContato     String?
+  whatsapp          String?
+  fotoBase64        String?
+  endereco          Endereco?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  Dependente        Dependente[]
+  VinculoModalidade VinculoModalidade[]
+  roleId            Int?
+
+  @@map("titulares")
 }
 
-model Pessoa {
-  id              Int      @id @default(autoincrement())
-  nome            String
-  dataNascimento  DateTime
-  cpf             String?  @unique
-  rg              String?
-  tituloEleitor   String?
-  zona            String?
-  secao           String?
-  localVotacao    String?
-  cartaoSUS       String?
-  numeroContato   String?
-  whatsapp        String?
-  fotoBase64      String?
-  endereco        String?
+model Dependente {
+  id                Int                 @id @default(autoincrement())
+  nome              String
+  dataNascimento    DateTime
+  tipo              String              @default("")
+  cpf               String?
+  rg                String?
+  tituloEleitor     String?
+  zona              String?
+  secao             String?
+  localVotacao      String?
+  cartaoSUS         String?
+  numeroContato     String?
+  whatsapp          String?
+  fotoBase64        String?
+  titularId         Int?
+  titular           Titular?            @relation(fields: [titularId], references: [id], onDelete: Cascade)
+  endereco          Endereco?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  VinculoModalidade VinculoModalidade[]
+
+  @@map("dependentes")
+}
+
+model Endereco {
+  id              Int         @id @default(autoincrement())
+  cep             String
   rua             String
   numero          String
   bairro          String
@@ -51,36 +82,44 @@ model Pessoa {
   pontoReferencia String?
   cidade          String
   estado          String
-  cep             String
+  titularId       Int?        @unique
+  titular         Titular?    @relation(fields: [titularId], references: [id], onDelete: Cascade)
+  dependenteId    Int?        @unique
+  dependente      Dependente? @relation(fields: [dependenteId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  Dependente Dependente[]
+  @@map("enderecos")
 }
 
-model Dependente {
-  id             Int      @id @default(autoincrement())
-  nome           String
-  dataNascimento DateTime
-  tipo           String   @default("")
-  cpf            String?
-  rg             String?
-  tituloEleitor  String?
-  zona           String?
-  secao          String?
-  localVotacao   String?
-  cartaoSUS      String?
-  numeroContato  String?
-  whatsapp       String?
-  fotoBase64     String?
-  cep            String?
-  rua            String?
-  numero         String?
-  bairro         String?
-  cidade         String?
-  estado         String?
-  pessoaId       Int
-  pessoa         Pessoa   @relation(fields: [pessoaId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model Modalidade {
+  id                Int                 @id @default(autoincrement())
+  nome              String              @unique
+  descricao         String?
+  ativo             Boolean             @default(true)
+  vinculoModalidade VinculoModalidade[]
+
+  @@map("modalidades")
+}
+
+model VinculoModalidade {
+  id           Int         @id @default(autoincrement())
+  modalidade   Modalidade? @relation(fields: [modalidadeId], references: [id], onDelete: Cascade)
+  modalidadeId Int?
+  titular      Titular?    @relation(fields: [titularId], references: [id], onDelete: Cascade)
+  titularId    Int?
+  dependente   Dependente? @relation(fields: [dependenteId], references: [id], onDelete: Cascade)
+  dependenteId Int?
+
+  @@unique([modalidadeId, titularId])
+  @@unique([modalidadeId, dependenteId])
+  @@map("vinculo_modalidades")
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  Usuario   Usuario[]
+
+  @@map("roles")
 }

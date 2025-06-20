@@ -22,6 +22,17 @@ export interface CreateDependenteDTO {
       secao?: string;
       cartaoSUS?: string;
       tipo: string;
+      modalidade?: number[];
+      endereco?: {
+            cep: string;
+            rua: string;
+            numero: string;
+            bairro: string;
+            cidade: string;
+            estado: string;
+            complemento?: string;
+            pontoReferencia?: string;
+      }
 }
 
 export interface UpdateDependenteDTO {
@@ -45,8 +56,26 @@ export interface UpdateDependenteDTO {
       cartaoSUS?: string;
       fotoBase64?: string;
       tipo?: string;
+      endereco?: {
+            cep: string;
+            rua: string;
+            numero: string;
+            bairro: string;
+            cidade: string;
+            estado: string;
+      }
 }
 
+export interface Endereco {
+      cep: string;
+      rua: string;
+      numero: string;
+      bairro: string;
+      cidade: string;
+      estado: string;
+      complemento?: string;
+      pontoReferencia?: string;
+}
 
 export class CreatePessoaDTO {
       @ApiProperty()
@@ -94,45 +123,6 @@ export class CreatePessoaDTO {
 
       @ApiProperty({ required: false })
       @IsOptional()
-      @IsString()
-      endereco?: string;
-
-      @ApiProperty()
-      @IsString()
-      rua: string;
-
-      @ApiProperty()
-      @IsString()
-      numero: string;
-
-      @ApiProperty()
-      @IsString()
-      bairro: string;
-
-      @ApiProperty({ required: false })
-      @IsOptional()
-      @IsString()
-      complemento?: string;
-
-      @ApiProperty({ required: false })
-      @IsOptional()
-      @IsString()
-      pontoReferencia?: string;
-
-      @ApiProperty()
-      @IsString()
-      cidade: string;
-
-      @ApiProperty()
-      @IsString()
-      estado: string;
-
-      @ApiProperty()
-      @IsString()
-      cep: string;
-
-      @ApiProperty({ required: false })
-      @IsOptional()
       dependentes?: CreateDependenteDTO[];
 
       @ApiProperty({ required: false, description: 'Imagem em base64' })
@@ -147,4 +137,12 @@ export class CreatePessoaDTO {
       @ApiProperty()
       @IsString()
       secao: string;
+
+      @ApiProperty()
+      @IsOptional()
+      @IsString()
+      modalidade?: number[];
+
+      endereco: Endereco;
+
 }

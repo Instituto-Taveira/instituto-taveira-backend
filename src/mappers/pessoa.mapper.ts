@@ -1,157 +1,144 @@
-// src/mappers/pessoa.mapper.ts
-
-import { Pessoa as PrismaPessoa } from '@prisma/client';
-import { Pessoa } from '../entities/pessoa.entity';
+import { Titular as PrismaPessoa } from '@prisma/client';
+import { Titular } from '../entities/titular.entity';
 import { CPF } from '../entities/cpf.entity';
 import { CreateDependenteDTO, CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
+import e from 'express';
 
-export class PessoaMapper {
-    static toDomain(prisma: PrismaPessoa): Pessoa {
-        return new Pessoa({
-            nome: prisma.nome,
-            dataNascimento: prisma.dataNascimento,
-            cpf: new CPF(prisma.cpf),
-            rg: prisma.rg ?? undefined,
-            tituloEleitor: prisma.tituloEleitor ?? undefined,
-            localVotacao: prisma.localVotacao ?? undefined,
-            cartaoSUS: prisma.cartaoSUS ?? undefined,
-            numeroContato: prisma.numeroContato ?? undefined,
-            whatsapp: prisma.whatsapp ?? undefined,
-            endereco: prisma.endereco ?? undefined,
-            rua: prisma.rua,
-            numero: prisma.numero,
-            bairro: prisma.bairro,
-            complemento: prisma.complemento ?? undefined,
-            pontoReferencia: prisma.pontoReferencia ?? undefined,
-            cidade: prisma.cidade,
-            estado: prisma.estado,
-            cep: prisma.cep,
-            fotoBase64: prisma.fotoBase64 ?? undefined,
-            updatedAt: prisma.updatedAt,
-        }, prisma.id);
+export class TitularMapper {
+  static toDomain(prisma: PrismaPessoa): Titular {
+    return new Titular({
+      nome: prisma.nome,
+      dataNascimento: prisma.dataNascimento,
+      cpf: new CPF(prisma.cpf),
+      rg: prisma.rg ?? undefined,
+      tituloEleitor: prisma.tituloEleitor ?? undefined,
+      localVotacao: prisma.localVotacao ?? undefined,
+      cartaoSUS: prisma.cartaoSUS ?? undefined,
+      numeroContato: prisma.numeroContato ?? undefined,
+      whatsapp: prisma.whatsapp ?? undefined,
+      fotoBase64: prisma.fotoBase64 ?? undefined,
+      endereco: undefined,
+      updatedAt: prisma.updatedAt,
+    }, prisma.id);
+  }
+
+  static toPrismaCreate(dto: CreatePessoaDTO) {
+    const pessoaData: any = {
+      nome: dto.nome,
+      dataNascimento: dto.dataNascimento,
+      cpf: new CPF(dto.cpf).getValue(),
+      rg: dto.rg,
+      tituloEleitor: dto.tituloEleitor,
+      localVotacao: dto.localVotacao,
+      cartaoSUS: dto.cartaoSUS,
+      numeroContato: dto.numeroContato,
+      whatsapp: dto.whatsapp,
+      fotoBase64: dto.fotoBase64,
+      zona: dto.zona,
+      secao: dto.secao,
+      endereco: {
+        cep: dto.endereco?.cep,
+        rua: dto.endereco?.rua,
+        numero: dto.endereco?.numero,
+        bairro: dto.endereco?.bairro,
+        cidade: dto.endereco?.cidade,
+        estado: dto.endereco?.estado,
+        complemento: dto.endereco?.complemento,
+        pontoReferencia: dto.endereco?.pontoReferencia,
+      },
+    };
+
+    if (dto.dependentes?.length) {
+      pessoaData.Dependente = {
+        create: dto.dependentes.map((dep: CreateDependenteDTO) => {
+          const d: any = {
+            nome: dep.nome,
+            dataNascimento: new Date(dep.dataNascimento),
+            cpf: dep.cpf,
+            rg: dep.rg,
+            tituloEleitor: dep.tituloEleitor,
+            localVotacao: dep.localVotacao,
+            cartaoSUS: dep.cartaoSUS,
+            numeroContato: dep.numeroContato,
+            whatsapp: dep.whatsapp,
+            fotoBase64: dep.fotoBase64,
+            tipo: dep.tipo,
+            zona: dep.zona,
+            secao: dep.secao,
+            endereco: {
+              cep: dep.endereco?.cep,
+              rua: dep.endereco?.rua,
+              numero: dep.endereco?.numero,
+              bairro: dep.endereco?.bairro,
+              cidade: dep.endereco?.cidade,
+              estado: dep.endereco?.estado,
+              complemento: dep.endereco?.complemento,
+              pontoReferencia: dep.endereco?.pontoReferencia,
+            },
+          };
+
+          return d;
+        }),
+      };
     }
 
-    static toPrismaCreate(dto: CreatePessoaDTO) {
-        const pessoaData: any = {
-            nome: dto.nome,
-            dataNascimento: dto.dataNascimento,
-            cpf: new CPF(dto.cpf).getValue(),
-            rg: dto.rg,
-            tituloEleitor: dto.tituloEleitor,
-            localVotacao: dto.localVotacao,
-            cartaoSUS: dto.cartaoSUS,
-            numeroContato: dto.numeroContato,
-            whatsapp: dto.whatsapp,
-            endereco: dto.endereco,
-            rua: dto.rua,
-            numero: dto.numero,
-            bairro: dto.bairro,
-            complemento: dto.complemento,
-            pontoReferencia: dto.pontoReferencia,
-            cidade: dto.cidade,
-            estado: dto.estado,
-            cep: dto.cep,
-            fotoBase64: dto.fotoBase64,
-            zona: dto.zona,
-            secao: dto.secao,
-        };
+    return pessoaData;
+  }
 
-        if (dto.dependentes?.length) {
-            pessoaData.Dependente = {
-                create: dto.dependentes.map((dep: CreateDependenteDTO) => {
-                    const d: any = {
-                        nome: dep.nome,
-                        dataNascimento: new Date(dep.dataNascimento),
-                    };
-                    if (dep.cpf) d.cpf = dep.cpf;
-                    if (dep.rg) d.rg = dep.rg;
-                    if (dep.tituloEleitor) d.tituloEleitor = dep.tituloEleitor;
-                    if (dep.localVotacao) d.localVotacao = dep.localVotacao;
-                    if (dep.cartaoSUS) d.cartaoSUS = dep.cartaoSUS;
-                    if (dep.numeroContato) d.numeroContato = dep.numeroContato;
-                    if (dep.whatsapp) d.whatsapp = dep.whatsapp;
-                    if (dep.fotoBase64) d.fotoBase64 = dep.fotoBase64;
-                    if (dep.tipo) d.tipo = dep.tipo;
-                    if (dep.cep) d.cep = dep.cep;
-                    if (dep.rua) d.rua = dep.rua;
-                    if (dep.numero) d.numero = dep.numero;
-                    if (dep.bairro) d.bairro = dep.bairro;
-                    if (dep.cidade) d.cidade = dep.cidade;
-                    if (dep.estado) d.estado = dep.estado;
-                    if (dep.zona) d.zona = dep.zona;
-                    if (dep.secao) d.secao = dep.secao;
+  static toPrismaUpdate(dto: UpdatePessoaDTO) {
+    const pessoaData: any = {
+      nome: dto.nome,
+      dataNascimento: dto.dataNascimento,
+      cpf: new CPF(dto.cpf).getValue(),
+      rg: dto.rg,
+      tituloEleitor: dto.tituloEleitor,
+      localVotacao: dto.localVotacao,
+      cartaoSUS: dto.cartaoSUS,
+      numeroContato: dto.numeroContato,
+      whatsapp: dto.whatsapp,
+      fotoBase64: dto.fotoBase64,
+      zona: dto.zona,
+      secao: dto.secao,
+      // Removido campo endereco do objeto userFields
+    };
 
-                    return d;
-                }),
-            };
-        }
+    return {
+      userFields: pessoaData,
+      endereco: dto.endereco ?? null,
+      dependentes: dto.dependentes?.map(dep => ({
+        id: dep.id,
+        nome: dep.nome,
+        dataNascimento: new Date(dep.dataNascimento),
+        cpf: dep.cpf,
+        rg: dep.rg,
+        tituloEleitor: dep.tituloEleitor,
+        localVotacao: dep.localVotacao,
+        cartaoSUS: dep.cartaoSUS,
+        numeroContato: dep.numeroContato,
+        whatsapp: dep.whatsapp,
+        fotoBase64: dep.fotoBase64,
+        tipo: dep.tipo,
+        zona: dep.zona,
+        secao: dep.secao,
+        endereco: dep.endereco ?? null,
+      })) ?? []
+    };
+  }
 
-        return pessoaData;
-    }
 
-    static toPrismaUpdate(dto: UpdatePessoaDTO) {
-        const pessoaData: any = {
-            nome: dto.nome,
-            dataNascimento: dto.dataNascimento,
-            cpf: new CPF(dto.cpf).getValue(),
-            rg: dto.rg,
-            tituloEleitor: dto.tituloEleitor,
-            localVotacao: dto.localVotacao,
-            cartaoSUS: dto.cartaoSUS,
-            numeroContato: dto.numeroContato,
-            whatsapp: dto.whatsapp,
-            endereco: dto.endereco,
-            rua: dto.rua,
-            numero: dto.numero,
-            bairro: dto.bairro,
-            complemento: dto.complemento,
-            pontoReferencia: dto.pontoReferencia,
-            cidade: dto.cidade,
-            estado: dto.estado,
-            cep: dto.cep,
-            fotoBase64: dto.fotoBase64,
-            zona: dto.zona,
-            secao: dto.secao,
-        };
-        return {
-            userFields: pessoaData,
-            dependentes: dto.dependentes?.map(dep => ({
-                id: dep.id,
-                nome: dep.nome,
-                dataNascimento: new Date(dep.dataNascimento),
-                cpf: dep.cpf,
-                rg: dep.rg,
-                tituloEleitor: dep.tituloEleitor,
-                localVotacao: dep.localVotacao,
-                cartaoSUS: dep.cartaoSUS,
-                numeroContato: dep.numeroContato,
-                whatsapp: dep.whatsapp,
-                fotoBase64: dep.fotoBase64,
-                tipo: dep.tipo,
-                cep: dep.cep,
-                rua: dep.rua,
-                numero: dep.numero,
-                bairro: dep.bairro,
-                cidade: dep.cidade,
-                estado: dep.estado,
-                zona: dep.zona,
-                secao: dep.secao,
-            })) ?? []
-        };
-    }
+  static toHttp(pessoa: Partial<Titular>): any {
+    return {
+      ...pessoa,
+      cpf: pessoa.cpf instanceof CPF ? pessoa.cpf.getValue() : pessoa.cpf,
+      endereco: pessoa.endereco ?? null
+    };
+  }
 
-    static toHttp(pessoa: Partial<Pessoa>): any {
-        return {
-            ...pessoa,
-            cpf: pessoa.cpf instanceof CPF ? pessoa.cpf.getValue() : pessoa.cpf,
-        };
-    }
-
-    static toEntity(data: any): Pessoa {
-        return new Pessoa({
-            ...data,
-            cpf: new CPF(data.cpf),
-        }, data.id);
-    }
+  static toEntity(data: any): Titular {
+    return new Titular({
+      ...data,
+      cpf: new CPF(data.cpf),
+    }, data.id);
+  }
 }

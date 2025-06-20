@@ -3,8 +3,9 @@ import { CPFExistsException } from 'src/common/exceptions/cpf-exists.exception';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
+import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
 import { CPF } from 'src/entities/cpf.entity';
-import { Pessoa } from 'src/entities/pessoa.entity';
+import { Titular } from 'src/entities/titular.entity';
 import IPessoaRepository from 'src/repository/pessoa/pessoa.repository.contract';
 
 @Injectable()
@@ -14,14 +15,14 @@ export class PessoaService {
             private readonly pessoaRepository: IPessoaRepository,
       ) { }
 
-      async create(data: CreatePessoaDTO): Promise<Pessoa> {
+      async create(data: CreatePessoaDTO): Promise<Titular> {
 
             const existPessoa = await this.pessoaRepository.findByCPF(data.cpf);
             if (existPessoa) {
                   throw new CPFExistsException();
             }
 
-            const pessoa: Pessoa = new Pessoa({
+            const titular: Titular = new Titular({
                   ...data,
                   cpf: new CPF(data.cpf),
                   updatedAt: new Date(),
@@ -31,23 +32,30 @@ export class PessoaService {
                               foto: dep.foto ?? '',
                         }))
                         : [],
+                  modalidade: Array.isArray(data.modalidade)
+                        ? data.modalidade.map((m: any) => String(m))
+                        : [],
             });
 
             return await this.pessoaRepository.create({
-                  ...pessoa,
-                  cpf: pessoa.cpf.getValue(),
-                  zona: pessoa.zona ?? '', // Ensure zona is present
-                  secao: pessoa.secao ?? '', // Ensure secao is present
-                  dependentes: pessoa.dependentes
-                        ? pessoa.dependentes.map((dep: any) => ({
+                  ...titular,
+                  cpf: titular.cpf.getValue(),
+                  zona: titular.zona ?? '',
+                  secao: titular.secao ?? '',
+                  dependentes: titular.dependentes
+                        ? titular.dependentes.map((dep: any) => ({
                               ...dep,
                               tipo: dep.tipo ?? '',
                         }))
                         : [],
+                  endereco: titular.endereco,
+                  modalidade: Array.isArray(titular.modalidade)
+                        ? titular.modalidade.map((m: any) => Number(m))
+                        : [],
             });
       }
 
-      async findById(id: number): Promise<Pessoa> {
+      async findById(id: number): Promise<Titular> {
             const pessoa = await this.pessoaRepository.findById(id);
 
             if (!pessoa) {
@@ -63,11 +71,11 @@ export class PessoaService {
 
       async findAll(
             filters: FiltersPessoaDTO,
-      ): Promise<PaginatedResult<Partial<Pessoa>>> {
+      ): Promise<PaginatedResult<Partial<Titular>>> {
             return await this.pessoaRepository.findAll(filters);
       }
 
-      async update(id: number, data: CreatePessoaDTO): Promise<void> {
+      async update(id: number, data: UpdatePessoaDTO): Promise<void> {
             const pessoa = await this.pessoaRepository.findById(id);
 
             if (!pessoa) {
@@ -98,30 +106,37 @@ export class PessoaService {
             return;
       }
 
-      async createBulk(data: CreatePessoaDTO[]): Promise<Pessoa[]> {
-            const pessoas: Pessoa[] = data.map(dto => new Pessoa({
+      async createBulk(data: CreatePessoaDTO[]): Promise<Titular[]> {
+            const pessoas: Titular[] = data.map(dto => new Titular({
                   ...dto,
                   cpf: new CPF(dto.cpf),
                   updatedAt: new Date(),
-                  dependentes: dto.dependentes
-                        ? dto.dependentes.map((dep: any) => ({
-                              ...dep,
-                              foto: dep.foto ?? '',
-                        }))
+                  dependentes: dto.dependentes?.map((dep: any) => ({
+                        ...dep,
+                        foto: dep.foto ?? '',
+                  })) ?? [],
+                  modalidade: Array.isArray(dto.modalidade)
+                        ? dto.modalidade.map((m: any) => String(m))
                         : [],
             }));
 
-            const pessoasDTO: CreatePessoaDTO[] = pessoas.map(pessoa => ({
-                  ...data.find(dto => dto.cpf === pessoa.cpf.getValue()),
-                  ...pessoa,
-                  cpf: pessoa.cpf.getValue(),
-                  dependentes: pessoa.dependentes
-                        ? pessoa.dependentes.map((dep: any) => ({
+            const pessoasDTO: CreatePessoaDTO[] = pessoas.map(pessoa => {
+                  const original = data.find(dto => dto.cpf === pessoa.cpf.getValue());
+
+                  return {
+                        ...original,
+                        ...pessoa,
+                        cpf: pessoa.cpf.getValue(),
+                        dependentes: pessoa.dependentes?.map((dep: any, index: number) => ({
+                              ...original?.dependentes?.[index],
                               ...dep,
-                              tipo: dep.tipo ?? '',
-                        }))
-                        : [],
-            }));
+                              tipo: dep.tipo ?? original?.dependentes?.[index]?.tipo ?? '',
+                        })) ?? [],
+                        modalidade: Array.isArray(pessoa.modalidade)
+                              ? pessoa.modalidade.map((m: any) => Number(m))
+                              : [],
+                  };
+            });
 
             return await this.pessoaRepository.createBulk(pessoasDTO);
       }

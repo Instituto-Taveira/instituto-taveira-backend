@@ -2,6 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsString } from 'class-validator';
 import { UpdateDependenteDTO } from './createPessoa.dto';
 
+export interface EnderecoUpdate {
+    cep?: string;
+    rua?: string;
+    numero?: string;
+    bairro?: string;
+    cidade?: string;
+    estado?: string;
+    complemento?: string;
+    pontoReferencia?: string;
+}
+
 export class UpdatePessoaDTO {
 
     @ApiProperty({ required: false })
@@ -67,54 +78,11 @@ export class UpdatePessoaDTO {
     @ApiProperty({ required: false })
     @IsOptional()
     @IsString()
-    endereco?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    rua?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    numero?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    bairro?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    complemento?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    pontoReferencia?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    cidade?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    estado?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
-    cep?: string;
-
-    @ApiProperty({ required: false })
-    @IsOptional()
-    @IsString()
     fotoBase64?: string;
 
     @ApiProperty({ required: false })
     @IsOptional()
     dependentes?: UpdateDependenteDTO[];
+
+    endereco?: EnderecoUpdate;
 }

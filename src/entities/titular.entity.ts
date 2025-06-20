@@ -1,6 +1,10 @@
 import { CPF } from './cpf.entity';
 
-export class Pessoa {
+export interface Modalidade {
+      nome: string;
+}
+
+export class Titular {
       id: number;
       nome: string;
       dataNascimento: Date;
@@ -11,20 +15,23 @@ export class Pessoa {
       cartaoSUS?: string;
       numeroContato?: string;
       whatsapp?: string;
-      endereco?: string;
-      rua: string;
-      numero: string;
-      bairro: string;
-      complemento?: string;
-      pontoReferencia?: string;
-      cidade: string;
-      estado: string;
-      cep: string;
       fotoBase64?: string;
       zona?: string;
       secao?: string;
       createdAt: Date;
       updatedAt?: Date | null;
+      modalidade?: string[];
+      tipoVinculo?: string;
+      endereco: {
+            cep: string;
+            rua: string;
+            numero: string;
+            bairro: string;
+            cidade: string;
+            estado: string;
+            complemento?: string;
+            pontoReferencia?: string;
+      }
       dependentes?: {
             nome: string;
             dataNascimento: Date;
@@ -35,9 +42,18 @@ export class Pessoa {
             localVotacao?: string;
             cartaoSUS?: string;
             numeroContato?: string;
+            tipoVinculo?: string;
+            endereco?: {
+                  cep: string;
+                  rua: string;
+                  numero: string;
+                  bairro: string;
+                  cidade: string;
+                  estado: string;
+            }
       }[];
 
-      constructor(props: Omit<Pessoa, 'id' | 'createdAt'>, id?: number) {
+      constructor(props: Omit<Titular, 'id' | 'createdAt'>, id?: number) {
             Object.assign(this, props);
             this.id = id;
             this.createdAt = new Date();

@@ -17,14 +17,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                   });
             }
 
-            const admin = await this.user.findFirst({
+            const admin = await this.usuario.findFirst({
                   where: {
                         login: 'adm@gmail.com',
                   },
             });
 
             if (!admin) {
-                  await this.user.create({
+                  await this.usuario.create({
                         data: {
                               name: 'Admin',
                               login: 'adm@gmail.com',
