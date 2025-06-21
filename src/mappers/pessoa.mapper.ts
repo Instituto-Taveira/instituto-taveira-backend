@@ -100,7 +100,6 @@ export class TitularMapper {
       fotoBase64: dto.fotoBase64,
       zona: dto.zona,
       secao: dto.secao,
-      // Removido campo endereco do objeto userFields
     };
 
     return {
@@ -122,6 +121,7 @@ export class TitularMapper {
         zona: dep.zona,
         secao: dep.secao,
         endereco: dep.endereco ?? null,
+        modalidade: dep.modalidade,
       })) ?? []
     };
   }

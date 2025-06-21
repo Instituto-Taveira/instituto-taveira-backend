@@ -24,8 +24,25 @@ export class ModalidadeRepository implements IModalidadeResitory {
         })
     }
 
+    async findInfos() {
+        const infos = await this.repository.vinculoModalidade.groupBy({
+            by: ['modalidadeId'],
+            _count: {
+                dependenteId: true,
+                titularId: true
+            }
+        });
+
+        return infos.map(info => ({
+            modalidadeId: info.modalidadeId,
+            total: info._count.dependenteId + info._count.titularId
+        }));
+    }
+
+
     async findAll(): Promise<Modalidade[]> {
-        return await this.repository.modalidade.findMany();
+        return await this.repository.modalidade.findMany({
+        });
     }
 
 }

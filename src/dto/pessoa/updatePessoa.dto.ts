@@ -84,5 +84,7 @@ export class UpdatePessoaDTO {
     @IsOptional()
     dependentes?: UpdateDependenteDTO[];
 
+    modalidade?: number[];
+
     endereco?: EnderecoUpdate;
 }

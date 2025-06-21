@@ -64,6 +64,7 @@ export interface UpdateDependenteDTO {
             cidade: string;
             estado: string;
       }
+      modalidade?: number[];
 }
 
 export interface Endereco {

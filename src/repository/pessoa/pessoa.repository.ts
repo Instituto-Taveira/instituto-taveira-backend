@@ -76,7 +76,6 @@ export class PessoaRepository implements IPessoaRepository {
 
                         // b) vínculo modalidade do dependente
                         if (dtoDep.modalidade?.length) {
-                              console.log('Criando vínculos de modalidade para dependente:', dtoDep.modalidade);
                               for (const modalidadeId of dtoDep.modalidade) {
                                     await this.repository.vinculoModalidade.create({
                                           data: {
@@ -284,7 +283,6 @@ export class PessoaRepository implements IPessoaRepository {
                   })),
             });
 
-            console.log('Pessoa encontrada por ID:', pessoaHttp);
             return pessoaHttp
 
       }
@@ -435,11 +433,26 @@ export class PessoaRepository implements IPessoaRepository {
                   where: { titularId: id },
             });
 
+            await this.repository.vinculoModalidade.deleteMany({
+                  where: { titularId: id },
+            });
+
+            await this.repository.vinculoModalidade.deleteMany({
+                  where: {
+                        dependenteId: { in: dependentes.map(dep => dep.id) },
+                  },
+            });
+
             // Atualiza o titular (sem endereço ainda)
             const updated = await this.repository.titular.update({
                   where: { id },
                   data: {
                         ...userFields,
+                        VinculoModalidade: {
+                                          create: data.modalidade?.map(modalidadeId => ({
+                                                modalidade: { connect: { id: modalidadeId } },
+                                          })) || [],
+                                    },
                         Dependente: {
                               create: dependentes.map(dep => ({
                                     nome: dep.nome,
@@ -455,6 +468,11 @@ export class PessoaRepository implements IPessoaRepository {
                                     numeroContato: dep.numeroContato,
                                     whatsapp: dep.whatsapp,
                                     tipo: dep.tipo ?? '',
+                                    VinculoModalidade: {
+                                          create: dep.modalidade?.map(modalidadeId => ({
+                                                modalidade: { connect: { id: modalidadeId } },
+                                          })) || [],
+                                    },
                               })),
                         },
                   },

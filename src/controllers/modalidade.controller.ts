@@ -18,4 +18,10 @@ export class ModalidadeController {
         return await this.modalidadeService.findAll();
     }
 
+    @Get('infos')
+    @IsPublic()
+    async findInfos() {
+        return await this.modalidadeService.findInfos();
+    }
+
 }

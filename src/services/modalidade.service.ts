@@ -22,4 +22,8 @@ export class ModalidadeService {
         return await this.modalidadeRepository.findAll();
     }
 
+    async findInfos() {
+        return await this.modalidadeRepository.findInfos();
+    }
+
 }
