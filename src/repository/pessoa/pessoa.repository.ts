@@ -538,111 +538,120 @@ export class PessoaRepository implements IPessoaRepository {
       }
 
       async createBulk(data: CreatePessoaDTO[]): Promise<Titular[]> {
-            // Mapeia apenas os dados escalares dos titulares (sem dependentes)
-            const pessoasScalars = data
-                  .map(TitularMapper.toPrismaCreate)
-                  .map(({ Dependente, ...scalars }) => scalars);
+  // 0. Extrai CPFs para deduplicação
+  const cpfs = data.map(d => d.cpf);
 
-            await this.repository.titular.createMany({
-                  data: pessoasScalars,
-                  skipDuplicates: true,
-            });
+  // 1. Cria todos os titulares (dados escalares)
+  const titularesScalars = data
+    .map(TitularMapper.toPrismaCreate)
+    .map(({ Dependente, modalidade, endereco, ...scalars }) => scalars);
 
-            // Busca os titulares inseridos para obter os IDs
-            const inseridas = await this.repository.titular.findMany({
-                  where: { cpf: { in: data.map(d => d.cpf) } },
-                  select: { id: true, cpf: true },
-            });
+  await this.repository.titular.createMany({
+    data: titularesScalars,
+    skipDuplicates: true,
+  });
 
-            // 1. Inserir endereços dos titulares
-            const enderecosTitulares = data.flatMap(dto => {
-                  const titular = inseridas.find(p => p.cpf === dto.cpf);
-                  if (!titular || !dto.endereco) return [];
+  // 2. Busca IDs inseridos
+  const inseridos = await this.repository.titular.findMany({
+    where: { cpf: { in: cpfs } },
+    select: { id: true, cpf: true },
+  });
 
-                  return [{
-                        ...dto.endereco,
-                        titularId: titular.id,
-                  }];
-            });
+  // 3. Vincula modalidades do titular
+  const vinculosTitulares = data.flatMap(dto => {
+    const tit = inseridos.find(x => x.cpf === dto.cpf);
+    if (!tit || !dto.modalidade?.length) return [];
+    return dto.modalidade.map(modId => ({
+      titularId: tit.id,
+      modalidadeId: modId,
+    }));
+  });
+  if (vinculosTitulares.length) {
+    await this.repository.vinculoModalidade.createMany({
+      data: vinculosTitulares,
+      skipDuplicates: true,
+    });
+  }
 
-            if (enderecosTitulares.length) {
-                  await this.repository.endereco.createMany({
-                        data: enderecosTitulares,
-                        skipDuplicates: true,
-                  });
-            }
+  // 4. Insere endereços dos titulares
+  const endTitulares = data.flatMap(dto => {
+    const tit = inseridos.find(x => x.cpf === dto.cpf);
+    if (!tit || !dto.endereco) return [];
+    return [{ ...dto.endereco, titularId: tit.id }];
+  });
+  if (endTitulares.length) {
+    await this.repository.endereco.createMany({ data: endTitulares, skipDuplicates: true });
+  }
 
-            // 2. Inserir dependentes
-            const dependentesData = data.flatMap(dto => {
-                  const titular = inseridas.find(p => p.cpf === dto.cpf);
-                  if (!titular || !dto.dependentes) return [];
+  // 5. Inserir dependentes e vincular modalidades
+  const depsData = data.flatMap(dto => {
+    const tit = inseridos.find(x => x.cpf === dto.cpf);
+    if (!tit || !dto.dependentes?.length) return [];
+    return dto.dependentes.map(dep => ({
+      nome: dep.nome,
+      dataNascimento: new Date(dep.dataNascimento),
+      cpf: dep.cpf,
+      rg: dep.rg,
+      tituloEleitor: dep.tituloEleitor,
+      cartaoSUS: dep.cartaoSUS,
+      numeroContato: dep.numeroContato,
+      whatsapp: dep.whatsapp,
+      secao: dep.secao,
+      zona: dep.zona,
+      tipo: dep.tipo ?? '',
+      fotoBase64: dep.fotoBase64,
+      titularId: tit.id,
+    }));
+  });
+  if (depsData.length) {
+    await this.repository.dependente.createMany({ data: depsData, skipDuplicates: true });
+  }
 
-                  return dto.dependentes.map((dep, index) => ({
-                        nome: dep.nome,
-                        dataNascimento: new Date(dep.dataNascimento),
-                        cpf: dep.cpf,
-                        rg: dep.rg,
-                        tituloEleitor: dep.tituloEleitor,
-                        cartaoSUS: dep.cartaoSUS,
-                        numeroContato: dep.numeroContato,
-                        whatsapp: dep.whatsapp,
-                        secao: dep.secao,
-                        zona: dep.zona,
-                        tipo: dep.tipo ?? '',
-                        titularId: titular.id,
-                  }));
-            });
+  // 6. Busca dependentes inseridos
+  const todosDeps = await this.repository.dependente.findMany({
+    where: { titularId: { in: inseridos.map(x => x.id) } },
+    select: { id: true, cpf: true, titularId: true },
+  });
 
-            if (dependentesData.length) {
-                  await this.repository.dependente.createMany({
-                        data: dependentesData,
-                        skipDuplicates: true,
-                  });
-            }
+  // 7. Vincula modalidades dos dependentes
+  const vinculosDeps = data.flatMap(dto => {
+    const tit = inseridos.find(x => x.cpf === dto.cpf);
+    if (!tit || !dto.dependentes?.length) return [];
+    return dto.dependentes.flatMap(dep => {
+      const inserted = todosDeps.find(d => d.cpf === dep.cpf && d.titularId === tit.id);
+      if (!inserted || !dep.modalidade?.length) return [];
+      return dep.modalidade.map(modId => ({ dependenteId: inserted.id, modalidadeId: modId }));
+    });
+  });
+  if (vinculosDeps.length) {
+    await this.repository.vinculoModalidade.createMany({
+      data: vinculosDeps,
+      skipDuplicates: true,
+    });
+  }
 
-            // 3. Buscar os dependentes inseridos (para associar endereço)
-            const todosDependentes = await this.repository.dependente.findMany({
-                  where: {
-                        titularId: { in: inseridas.map(p => p.id) }
-                  },
-                  select: {
-                        id: true,
-                        titularId: true,
-                        cpf: true,
-                  },
-            });
+  // 8. Insere endereços dos dependentes
+  const endDeps = data.flatMap(dto => {
+    const tit = inseridos.find(x => x.cpf === dto.cpf);
+    if (!tit || !dto.dependentes?.length) return [];
+    return dto.dependentes.flatMap(dep => {
+      const inserted = todosDeps.find(d => d.cpf === dep.cpf && d.titularId === tit.id);
+      if (!inserted || !dep.endereco) return [];
+      return [{ ...dep.endereco, dependenteId: inserted.id }];
+    });
+  });
+  if (endDeps.length) {
+    await this.repository.endereco.createMany({ data: endDeps, skipDuplicates: true });
+  }
 
-            // 4. Inserir endereços dos dependentes (se houver)
-            const enderecosDependentes = data.flatMap(dto => {
-                  const titular = inseridas.find(p => p.cpf === dto.cpf);
-                  if (!titular || !dto.dependentes) return [];
+  // 9. Retorna titulares completos com dependentes
+  const result = await this.repository.titular.findMany({
+    where: { id: { in: inseridos.map(x => x.id) } },
+    include: { Dependente: true },
+  });
+  return result.map(TitularMapper.toDomain);
+}
 
-                  return dto.dependentes.flatMap(dep => {
-                        const depInserido = todosDependentes.find(d => d.cpf === dep.cpf && d.titularId === titular.id);
-                        if (!depInserido || !dep.endereco) return [];
-
-                        return [{
-                              ...dep.endereco,
-                              dependenteId: depInserido.id,
-                        }];
-                  });
-            });
-
-            if (enderecosDependentes.length) {
-                  await this.repository.endereco.createMany({
-                        data: enderecosDependentes,
-                        skipDuplicates: true,
-                  });
-            }
-
-            // 5. Retornar os titulares com dependentes (endereços podem ser incluídos se necessário)
-            return this.repository.titular.findMany({
-                  where: { id: { in: inseridas.map(p => p.id) } },
-                  include: {
-                        Dependente: true,
-                  },
-            }).then(rows => rows.map(TitularMapper.toDomain));
-      }
 
 
 }
