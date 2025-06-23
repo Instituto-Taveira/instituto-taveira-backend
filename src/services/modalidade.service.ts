@@ -1,5 +1,6 @@
 import { HttpException, Inject } from "@nestjs/common";
 import { CreateModalidadeDto } from "src/dto/modalidade/createModalidade.dto";
+import { UpdateModalidadeDto } from "src/dto/modalidade/updateModalidade.dto";
 import IModalidadeRepository from "src/repository/modalidade/modalidade.repository.contract";
 
 export class ModalidadeService {
@@ -24,6 +25,20 @@ export class ModalidadeService {
 
     async findInfos() {
         return await this.modalidadeRepository.findInfos();
+    }
+
+    async update(id: number, payload: UpdateModalidadeDto) {
+        const modalidadeExists = await this.modalidadeRepository.findByNome(payload.nome);
+
+        if (modalidadeExists) {
+            throw new HttpException('Modalidade já cadastrada!', 400);
+        }
+
+        return await this.modalidadeRepository.update(id, payload);
+    }
+
+    async delete(id: number) {
+        return await this.modalidadeRepository.delete(id);
     }
 
 }

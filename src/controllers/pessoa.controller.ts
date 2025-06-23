@@ -9,12 +9,12 @@ import {
       Patch,
       Post,
       Query,
-      Req,
       UseFilters,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DomainExceptionFilter } from 'src/common/filters/domain-exception.filter';
 import { IsPublic } from 'src/decorators/public.decorator';
+import { Roles } from 'src/decorators/roles.decorator';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
@@ -27,7 +27,6 @@ export class PessoaController {
       constructor(private readonly pessoaService: PessoaService) { }
 
       @Get('birthdays')
-      @IsPublic()
       @UseFilters(new DomainExceptionFilter())
       async findBirthDays(): Promise<{ pessoas: Titular[]; dependentes: any[] }> {
             return this.pessoaService.findBirthDays();
@@ -39,7 +38,6 @@ export class PessoaController {
                   'Utilize este endpoint para cadastrar uma nova pessoa.',
       })
       @Post()
-      @IsPublic()
       @UseFilters(new DomainExceptionFilter())
       @HttpCode(HttpStatus.CREATED)
       async create(@Body() payload: CreatePessoaDTO): Promise<Titular> {
@@ -52,7 +50,6 @@ export class PessoaController {
                   'Utilize este endpoint para buscar uma pessoa pelo ID.',
       })
       @Get(':id')
-      @IsPublic()
       //   @UseGuards(JwtAuthGuard)
       async findById(@Param('id') id: number): Promise<Titular> {
             return await this.pessoaService.findById(Number(id));
@@ -64,7 +61,6 @@ export class PessoaController {
                   'Utilize este endpoint para listar todas as pessoas cadastradas.',
       })
       @Get()
-      @IsPublic()
       @ApiQuery({
             name: 'page',
             required: false,
@@ -88,7 +84,6 @@ export class PessoaController {
                   'Utilize este endpoint para atualizar os dados de uma pessoa.',
       })
       @Patch(':id')
-      @IsPublic()
       //   @UseGuards(JwtAuthGuard)
       async update(@Param('id') id: number, @Body() payload: UpdatePessoaDTO) {
             await this.pessoaService.update(Number(id), payload);
@@ -101,14 +96,12 @@ export class PessoaController {
                   'Utilize este endpoint para deletar uma pessoa cadastrada.',
       })
       @Delete(':id')
-      @IsPublic()
       //   @UseGuards(JwtAuthGuard)
       async delete(@Param('id') id: number) {
             await this.pessoaService.delete(Number(id));
             return { message: 'Pessoa deletada com sucesso!' };
       }
 
-      @IsPublic()
       @ApiOperation({
             summary: 'Criar Várias Pessoas',
             description:
