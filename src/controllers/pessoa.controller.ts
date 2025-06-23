@@ -10,14 +10,17 @@ import {
       Post,
       Query,
       UseFilters,
+      UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DomainExceptionFilter } from 'src/common/filters/domain-exception.filter';
+import { RolesGuard } from 'src/config/authentication/guards/roles.guard';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
+import { Role } from 'src/entities/role.entity';
 import { Titular } from 'src/entities/titular.entity';
 import { PessoaService } from 'src/services/pessoa.service';
 
@@ -108,6 +111,8 @@ export class PessoaController {
                   'Utilize este endpoint para cadastrar várias pessoas de uma vez.',
       })
       @HttpCode(HttpStatus.CREATED)
+      @Roles('admin')
+      @UseGuards(RolesGuard)
       @Post('bulk')
       bulkCreate(@Body() users: CreatePessoaDTO[]) {
             return this.pessoaService.createBulk(users);
