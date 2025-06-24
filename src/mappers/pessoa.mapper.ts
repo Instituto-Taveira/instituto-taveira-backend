@@ -121,7 +121,7 @@ export class TitularMapper {
         zona: dep.zona,
         secao: dep.secao,
         endereco: dep.endereco ?? null,
-        modalidade: dep.modalidade,
+        modalidade: dep.modalidade ?? null,
       })) ?? []
     };
   }

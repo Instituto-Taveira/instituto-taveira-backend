@@ -426,109 +426,149 @@ export class PessoaRepository implements IPessoaRepository {
       }
 
       async update(id: number, data: UpdatePessoaDTO): Promise<Titular> {
+            // 1) Extrai userFields e dependentes via mapper
             const { userFields, dependentes } = TitularMapper.toPrismaUpdate(data);
 
-            // Remove dependentes antigos
-            await this.repository.dependente.deleteMany({
-                  where: { titularId: id },
-            });
+            // 2) Sanitiza o array de modalidades do titular
+            const titularModalidades = (data.modalidade ?? [])
+                  .map(x => Number(x))
+                  .filter(n => Number.isInteger(n) && n > 0);
 
-            await this.repository.vinculoModalidade.deleteMany({
-                  where: { titularId: id },
-            });
+            // --- CASO ESPECIAL: payload veio com dependentes = [] ---
+            if (Array.isArray(dependentes) && dependentes.length === 0) {
+                  // apaga TODOS os vínculos e registros de dependentes
+                  await this.repository.vinculoModalidade.deleteMany({ where: { titularId: id } });
+                  await this.repository.endereco.deleteMany({ where: { dependente: { titularId: id } } });
+                  await this.repository.dependente.deleteMany({ where: { titularId: id } });
 
-            await this.repository.vinculoModalidade.deleteMany({
-                  where: {
-                        dependenteId: { in: dependentes.map(dep => dep.id) },
-                  },
-            });
+                  // apenas atualiza o titular (e recria vínculos do titular, se houver)
+                  const updatedSóTitular = await this.repository.titular.update({
+                        where: { id },
+                        data: {
+                              ...userFields,
+                              VinculoModalidade: {
+                                    // se vier modalidades, cria; se não, vazio
+                                    create: titularModalidades.map(mid => ({ modalidade: { connect: { id: mid } } })),
+                              },
+                        },
+                        include: { Dependente: true },
+                  });
 
-            // Atualiza o titular (sem endereço ainda)
-            const updated = await this.repository.titular.update({
+                  return TitularMapper.toDomain(updatedSóTitular);
+            }
+
+            // 3) Sanitiza cada dependente e suas modalidades (para os casos com dependentes)
+            const depsSanitizados = dependentes.map(dep => ({
+                  ...dep,
+                  modalidade: (dep.modalidade ?? [])
+                        .map(x => Number(x))
+                        .filter(n => Number.isInteger(n) && n > 0),
+            }));
+
+            // --- VÍNCULOS DO TITULAR ---
+            if (titularModalidades.length > 0) {
+                  await this.repository.vinculoModalidade.deleteMany({
+                        where: { titularId: id },
+                  });
+            }
+
+            // --- VÍNCULOS DOS DEPENDENTES EXISTENTES ---
+            const existentes = depsSanitizados.filter(d => d.id && d.id > 0);
+            const existentesIds = existentes.map(d => Number(d.id));
+            if (existentesIds.length > 0) {
+                  await this.repository.vinculoModalidade.deleteMany({
+                        where: { dependenteId: { in: existentesIds } },
+                  });
+                  for (const dep of existentes) {
+                        for (const mid of dep.modalidade) {
+                              await this.repository.vinculoModalidade.create({
+                                    data: { dependenteId: dep.id, modalidadeId: mid },
+                              });
+                        }
+                  }
+            }
+
+            // --- ATUALIZA O TITULAR E CRIA NOVOS DEPENDENTES + VÍNCULOS ---
+            await this.repository.titular.update({
                   where: { id },
                   data: {
                         ...userFields,
                         VinculoModalidade: {
-                                          create: data.modalidade?.map(modalidadeId => ({
-                                                modalidade: { connect: { id: modalidadeId } },
-                                          })) || [],
-                                    },
-                        Dependente: {
-                              create: dependentes.map(dep => ({
-                                    nome: dep.nome,
-                                    dataNascimento: dep.dataNascimento,
-                                    cpf: dep.cpf,
-                                    rg: dep.rg,
-                                    fotoBase64: dep.fotoBase64,
-                                    tituloEleitor: dep.tituloEleitor,
-                                    zona: dep.zona,
-                                    secao: dep.secao,
-                                    localVotacao: dep.localVotacao,
-                                    cartaoSUS: dep.cartaoSUS,
-                                    numeroContato: dep.numeroContato,
-                                    whatsapp: dep.whatsapp,
-                                    tipo: dep.tipo ?? '',
-                                    VinculoModalidade: {
-                                          create: dep.modalidade?.map(modalidadeId => ({
-                                                modalidade: { connect: { id: modalidadeId } },
-                                          })) || [],
-                                    },
+                              create: titularModalidades.map(mid => ({
+                                    modalidade: { connect: { id: mid } },
                               })),
+                        },
+                        Dependente: {
+                              create: depsSanitizados
+                                    .filter(d => !d.id || d.id === 0)
+                                    .map(dep => ({
+                                          nome: dep.nome,
+                                          dataNascimento: dep.dataNascimento,
+                                          cpf: dep.cpf,
+                                          rg: dep.rg,
+                                          fotoBase64: dep.fotoBase64,
+                                          tituloEleitor: dep.tituloEleitor,
+                                          zona: dep.zona,
+                                          secao: dep.secao,
+                                          localVotacao: dep.localVotacao,
+                                          cartaoSUS: dep.cartaoSUS,
+                                          numeroContato: dep.numeroContato,
+                                          whatsapp: dep.whatsapp,
+                                          tipo: dep.tipo ?? '',
+                                          VinculoModalidade: {
+                                                create: dep.modalidade.map(mid => ({
+                                                      modalidade: { connect: { id: mid } },
+                                                })),
+                                          },
+                                    })),
                         },
                   },
                   include: { Dependente: true },
             });
 
-            // Atualiza ou cria endereço do titular
+            // --- ENDEREÇOS DO TITULAR ---
             if (data.endereco) {
-                  // Apaga endereço anterior se existir (opcional)
-                  await this.repository.endereco.deleteMany({
-                        where: { titularId: id },
-                  });
-
+                  await this.repository.endereco.deleteMany({ where: { titularId: id } });
                   await this.repository.endereco.create({
                         data: {
-                              cep: data.endereco.cep!,
-                              rua: data.endereco.rua!,
-                              numero: data.endereco.numero!,
-                              bairro: data.endereco.bairro!,
-                              cidade: data.endereco.cidade!,
-                              estado: data.endereco.estado!,
+                              cep: data.endereco.cep ?? '',
+                              rua: data.endereco.rua ?? '',
+                              numero: data.endereco.numero ?? '',
+                              bairro: data.endereco.bairro ?? '',
+                              cidade: data.endereco.cidade ?? '',
+                              estado: data.endereco.estado ?? '',
                               complemento: data.endereco.complemento ?? '',
                               pontoReferencia: data.endereco.pontoReferencia ?? '',
-                              titular: {
-                                    connect: { id },
-                              },
+                              titular: { connect: { id } },
                         },
                   });
             }
 
-            // Associa endereços aos novos dependentes (buscando os recém-criados)
+            // --- ENDEREÇOS DOS DEPENDENTES ---
+            // limpa todos antes de recriar
+            await this.repository.endereco.deleteMany({ where: { dependente: { titularId: id } } });
             const dependentesCriados = await this.repository.dependente.findMany({
                   where: { titularId: id },
                   select: { id: true, cpf: true },
             });
-
-            for (const dep of dependentes) {
+            for (const dep of depsSanitizados) {
                   const encontrado = dependentesCriados.find(d => d.cpf === dep.cpf);
                   if (dep.endereco && encontrado) {
                         await this.repository.endereco.create({
-                              data: {
-                                    ...dep.endereco,
-                                    dependenteId: encontrado.id,
-                              },
+                              data: { ...dep.endereco, dependenteId: encontrado.id },
                         });
                   }
             }
 
-            // Retorna com os dados atualizados
+            // --- RETORNA O OBJETO COMPLETO ---
             const titularFinal = await this.repository.titular.findUnique({
                   where: { id },
                   include: { Dependente: true },
             });
-
             return TitularMapper.toDomain(titularFinal!);
       }
+
+
 
 
       async delete(id: number): Promise<void> {
@@ -538,120 +578,118 @@ export class PessoaRepository implements IPessoaRepository {
       }
 
       async createBulk(data: CreatePessoaDTO[]): Promise<Titular[]> {
-  // 0. Extrai CPFs para deduplicação
-  const cpfs = data.map(d => d.cpf);
+            // 0. Extrai CPFs para deduplicação
+            const cpfs = data.map(d => d.cpf);
 
-  // 1. Cria todos os titulares (dados escalares)
-  const titularesScalars = data
-    .map(TitularMapper.toPrismaCreate)
-    .map(({ Dependente, modalidade, endereco, ...scalars }) => scalars);
+            // 1. Cria todos os titulares (dados escalares)
+            const titularesScalars = data
+                  .map(TitularMapper.toPrismaCreate)
+                  .map(({ Dependente, modalidade, endereco, ...scalars }) => scalars);
 
-  await this.repository.titular.createMany({
-    data: titularesScalars,
-    skipDuplicates: true,
-  });
+            await this.repository.titular.createMany({
+                  data: titularesScalars,
+                  skipDuplicates: true,
+            });
 
-  // 2. Busca IDs inseridos
-  const inseridos = await this.repository.titular.findMany({
-    where: { cpf: { in: cpfs } },
-    select: { id: true, cpf: true },
-  });
+            // 2. Busca IDs inseridos
+            const inseridos = await this.repository.titular.findMany({
+                  where: { cpf: { in: cpfs } },
+                  select: { id: true, cpf: true },
+            });
 
-  // 3. Vincula modalidades do titular
-  const vinculosTitulares = data.flatMap(dto => {
-    const tit = inseridos.find(x => x.cpf === dto.cpf);
-    if (!tit || !dto.modalidade?.length) return [];
-    return dto.modalidade.map(modId => ({
-      titularId: tit.id,
-      modalidadeId: modId,
-    }));
-  });
-  if (vinculosTitulares.length) {
-    await this.repository.vinculoModalidade.createMany({
-      data: vinculosTitulares,
-      skipDuplicates: true,
-    });
-  }
+            // 3. Vincula modalidades do titular
+            const vinculosTitulares = data.flatMap(dto => {
+                  const tit = inseridos.find(x => x.cpf === dto.cpf);
+                  if (!tit || !dto.modalidade?.length) return [];
+                  return dto.modalidade.map(modId => ({
+                        titularId: tit.id,
+                        modalidadeId: modId,
+                  }));
+            });
+            if (vinculosTitulares.length) {
+                  await this.repository.vinculoModalidade.createMany({
+                        data: vinculosTitulares,
+                        skipDuplicates: true,
+                  });
+            }
 
-  // 4. Insere endereços dos titulares
-  const endTitulares = data.flatMap(dto => {
-    const tit = inseridos.find(x => x.cpf === dto.cpf);
-    if (!tit || !dto.endereco) return [];
-    return [{ ...dto.endereco, titularId: tit.id }];
-  });
-  if (endTitulares.length) {
-    await this.repository.endereco.createMany({ data: endTitulares, skipDuplicates: true });
-  }
+            // 4. Insere endereços dos titulares
+            const endTitulares = data.flatMap(dto => {
+                  const tit = inseridos.find(x => x.cpf === dto.cpf);
+                  if (!tit || !dto.endereco) return [];
+                  return [{ ...dto.endereco, titularId: tit.id }];
+            });
+            if (endTitulares.length) {
+                  await this.repository.endereco.createMany({ data: endTitulares, skipDuplicates: true });
+            }
 
-  // 5. Inserir dependentes e vincular modalidades
-  const depsData = data.flatMap(dto => {
-    const tit = inseridos.find(x => x.cpf === dto.cpf);
-    if (!tit || !dto.dependentes?.length) return [];
-    return dto.dependentes.map(dep => ({
-      nome: dep.nome,
-      dataNascimento: new Date(dep.dataNascimento),
-      cpf: dep.cpf,
-      rg: dep.rg,
-      tituloEleitor: dep.tituloEleitor,
-      cartaoSUS: dep.cartaoSUS,
-      numeroContato: dep.numeroContato,
-      whatsapp: dep.whatsapp,
-      secao: dep.secao,
-      zona: dep.zona,
-      tipo: dep.tipo ?? '',
-      fotoBase64: dep.fotoBase64,
-      titularId: tit.id,
-    }));
-  });
-  if (depsData.length) {
-    await this.repository.dependente.createMany({ data: depsData, skipDuplicates: true });
-  }
+            // 5. Inserir dependentes e vincular modalidades
+            const depsData = data.flatMap(dto => {
+                  const tit = inseridos.find(x => x.cpf === dto.cpf);
+                  if (!tit || !dto.dependentes?.length) return [];
+                  return dto.dependentes.map(dep => ({
+                        nome: dep.nome,
+                        dataNascimento: new Date(dep.dataNascimento),
+                        cpf: dep.cpf,
+                        rg: dep.rg,
+                        tituloEleitor: dep.tituloEleitor,
+                        cartaoSUS: dep.cartaoSUS,
+                        numeroContato: dep.numeroContato,
+                        whatsapp: dep.whatsapp,
+                        secao: dep.secao,
+                        zona: dep.zona,
+                        tipo: dep.tipo ?? '',
+                        fotoBase64: dep.fotoBase64,
+                        titularId: tit.id,
+                  }));
+            });
+            if (depsData.length) {
+                  await this.repository.dependente.createMany({ data: depsData, skipDuplicates: true });
+            }
 
-  // 6. Busca dependentes inseridos
-  const todosDeps = await this.repository.dependente.findMany({
-    where: { titularId: { in: inseridos.map(x => x.id) } },
-    select: { id: true, cpf: true, titularId: true },
-  });
+            // 6. Busca dependentes inseridos
+            const todosDeps = await this.repository.dependente.findMany({
+                  where: { titularId: { in: inseridos.map(x => x.id) } },
+                  select: { id: true, cpf: true, titularId: true },
+            });
 
-  // 7. Vincula modalidades dos dependentes
-  const vinculosDeps = data.flatMap(dto => {
-    const tit = inseridos.find(x => x.cpf === dto.cpf);
-    if (!tit || !dto.dependentes?.length) return [];
-    return dto.dependentes.flatMap(dep => {
-      const inserted = todosDeps.find(d => d.cpf === dep.cpf && d.titularId === tit.id);
-      if (!inserted || !dep.modalidade?.length) return [];
-      return dep.modalidade.map(modId => ({ dependenteId: inserted.id, modalidadeId: modId }));
-    });
-  });
-  if (vinculosDeps.length) {
-    await this.repository.vinculoModalidade.createMany({
-      data: vinculosDeps,
-      skipDuplicates: true,
-    });
-  }
+            // 7. Vincula modalidades dos dependentes
+            const vinculosDeps = data.flatMap(dto => {
+                  const tit = inseridos.find(x => x.cpf === dto.cpf);
+                  if (!tit || !dto.dependentes?.length) return [];
+                  return dto.dependentes.flatMap(dep => {
+                        const inserted = todosDeps.find(d => d.cpf === dep.cpf && d.titularId === tit.id);
+                        if (!inserted || !dep.modalidade?.length) return [];
+                        return dep.modalidade.map(modId => ({ dependenteId: inserted.id, modalidadeId: modId }));
+                  });
+            });
+            if (vinculosDeps.length) {
+                  await this.repository.vinculoModalidade.createMany({
+                        data: vinculosDeps,
+                        skipDuplicates: true,
+                  });
+            }
 
-  // 8. Insere endereços dos dependentes
-  const endDeps = data.flatMap(dto => {
-    const tit = inseridos.find(x => x.cpf === dto.cpf);
-    if (!tit || !dto.dependentes?.length) return [];
-    return dto.dependentes.flatMap(dep => {
-      const inserted = todosDeps.find(d => d.cpf === dep.cpf && d.titularId === tit.id);
-      if (!inserted || !dep.endereco) return [];
-      return [{ ...dep.endereco, dependenteId: inserted.id }];
-    });
-  });
-  if (endDeps.length) {
-    await this.repository.endereco.createMany({ data: endDeps, skipDuplicates: true });
-  }
+            // 8. Insere endereços dos dependentes
+            const endDeps = data.flatMap(dto => {
+                  const tit = inseridos.find(x => x.cpf === dto.cpf);
+                  if (!tit || !dto.dependentes?.length) return [];
+                  return dto.dependentes.flatMap(dep => {
+                        const inserted = todosDeps.find(d => d.cpf === dep.cpf && d.titularId === tit.id);
+                        if (!inserted || !dep.endereco) return [];
+                        return [{ ...dep.endereco, dependenteId: inserted.id }];
+                  });
+            });
+            if (endDeps.length) {
+                  await this.repository.endereco.createMany({ data: endDeps, skipDuplicates: true });
+            }
 
-  // 9. Retorna titulares completos com dependentes
-  const result = await this.repository.titular.findMany({
-    where: { id: { in: inseridos.map(x => x.id) } },
-    include: { Dependente: true },
-  });
-  return result.map(TitularMapper.toDomain);
-}
-
-
+            // 9. Retorna titulares completos com dependentes
+            const result = await this.repository.titular.findMany({
+                  where: { id: { in: inseridos.map(x => x.id) } },
+                  include: { Dependente: true },
+            });
+            return result.map(TitularMapper.toDomain);
+      }
 
 }
