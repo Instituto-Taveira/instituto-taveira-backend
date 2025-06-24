@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '../config/authentication/guards/jwtAuth.guard';
 import { PessoaModule } from './pessoa.module';
 import { ModalidadeModule } from './modalidade.module';
+import { PagamentoModule } from './pagamento.module';
 
 @Module({
       imports: [
@@ -17,7 +18,8 @@ import { ModalidadeModule } from './modalidade.module';
             UserModule,
             AuthModule,
             PessoaModule,
-            ModalidadeModule
+            ModalidadeModule,
+            PagamentoModule
       ],
       controllers: [AppController],
       providers: [
@@ -28,4 +30,4 @@ import { ModalidadeModule } from './modalidade.module';
             },
       ],
 })
-export class AppModule {}
+export class AppModule { }

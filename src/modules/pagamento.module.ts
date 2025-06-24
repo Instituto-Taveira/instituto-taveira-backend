@@ -1,0 +1,19 @@
+import { forwardRef, Module } from '@nestjs/common';
+import { AuthModule } from './auth.module';
+import { PagamentoController } from 'src/controllers/pagamento.controller';
+import PagamentoService from 'src/services/pagamento.service';
+import { PagamentoRepository } from 'src/repository/pagamento/pagamento.repository';
+
+@Module({
+    controllers: [PagamentoController],
+    imports: [forwardRef(() => AuthModule)],
+    providers: [
+        PagamentoService,
+        {
+            provide: 'IPagamentoRepository',
+            useClass: PagamentoRepository,
+        },
+    ],
+    exports: [PagamentoService],
+})
+export class PagamentoModule { }
