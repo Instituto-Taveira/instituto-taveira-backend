@@ -4,8 +4,8 @@ import * as dayjs from 'dayjs';
 
 @Injectable()
 export class PagamentoRepository {
-    private readonly TOKEN = 'cc9116d3-b202-4645-bb76-afe85b485fd8adcc84044a3fa4f4c31a772c1cc3dbaf3723-8967-41f7-b7fb-997ba4ac117b';
-    private readonly BASE_URL = 'https://sandbox.api.pagseguro.com';
+    private readonly TOKEN = process.env.PAGSEGURO_TOKEN;
+    private readonly BASE_URL = process.env.PAGSEGURO_BASE_URL;
 
     async create() {
         const mesAtual = new Date().getMonth() + 1;
