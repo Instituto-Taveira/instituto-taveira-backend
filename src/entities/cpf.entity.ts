@@ -2,11 +2,6 @@ export class CPF {
     private readonly value: string;
 
     constructor(cpf: string) {
-        // const cleaned = cpf.replace(/[^\d]/g, '');
-        // if (!CPF.isValid(cleaned)) {
-        //     throw new Error('CPF inválido');
-        // }
-
         this.value = CPF.format(cpf);
     }
 

@@ -10,16 +10,20 @@ import { JwtAuthGuard } from '../config/authentication/guards/jwtAuth.guard';
 import { PessoaModule } from './pessoa.module';
 import { ModalidadeModule } from './modalidade.module';
 import { PagamentoModule } from './pagamento.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CobrancaModule } from './cobranca.module';
 
 @Module({
       imports: [
+            ScheduleModule.forRoot(),
             ConfigModule.forRoot({ envFilePath: '.env' }),
             RepositoryModule,
             UserModule,
             AuthModule,
             PessoaModule,
             ModalidadeModule,
-            PagamentoModule
+            PagamentoModule,
+            CobrancaModule
       ],
       controllers: [AppController],
       providers: [

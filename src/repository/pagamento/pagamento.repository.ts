@@ -1,53 +1,63 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import * as dayjs from 'dayjs';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/config/database/prisma.service';
+import { IPagamentoRepository } from './pagamento.repository.contract';
+import { CreatePaymentDto } from 'src/dto/pagamento/create.payment.dto';
+import { ResponseGetPayments } from 'src/dto/pagamento/reponse.get.payments.dto';
 
 @Injectable()
-export class PagamentoRepository {
-    private readonly TOKEN = process.env.PAGSEGURO_TOKEN;
-    private readonly BASE_URL = process.env.PAGSEGURO_BASE_URL;
+export class PagamentoRepository implements IPagamentoRepository {
+    constructor(private prisma: PrismaService) { }
 
-    async create() {
-        const mesAtual = new Date().getMonth() + 1;
+    async create(data: CreatePaymentDto): Promise<{ id: number }> {
 
-        const dataExpiracao = dayjs().add(1, 'hour').toISOString();
-
-        const response = await axios.post(
-            `${this.BASE_URL}/orders`,
-            {
-                reference_id: `assinatura-taveira-mes-${mesAtual}`,
-                customer: {
-                    name: 'Cliente Instituto Taveira',
-                    email: 'contato@institutotaveira.com',
-                    tax_id: '12345678909'
-                },
-                items: [
-                    {
-                        name: `Assinatura mensal - Instituto Taveira - Mês ${mesAtual}`,
-                        quantity: 1,
-                        unit_amount: 50,
-                    },
-                ],
-                qr_codes: [
-                    {
-                        amount: {
-                            value: 50,
-                        },
-                        expiration_date: dataExpiracao,
-                    },
-                ],
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${this.TOKEN}`,
-                    'Content-Type': 'application/json',
-                },
+        const payment = await this.prisma.pagamento.create({
+            data: {
+                ...data
             }
-        );
+        })
 
         return {
-            id: response.data.id,
-            qrCodeLink: response.data.qr_codes[0].links[0].href,
-        };
+            id: payment.id
+        }
+
     }
+
+    async updateStatus(
+        reference_id: string,
+        status: Prisma.EnumStatusFieldUpdateOperationsInput,
+        payer: string,
+        paymentMethod: string,
+        amount: number,
+        amountPayed: number
+    ): Promise<any> {
+
+        await this.prisma.pagamento.update({
+            where: {
+                reference_id: reference_id
+            },
+            data: {
+                status: status,
+                payer: payer,
+                endedAt: new Date(),
+                paymentMethod: paymentMethod,
+                amount: amount,
+                amountPayed: amountPayed
+            }
+        })
+    }
+
+    async findAllPayments(): Promise<ResponseGetPayments[]> {
+        return await this.prisma.pagamento.findMany();
+    }
+
+    async findPaymentById(paymentId: number): Promise<ResponseGetPayments> {
+        return await this.prisma.pagamento.findUnique({
+            where: {
+                id: paymentId
+            }
+        })
+    }
+
+
 }

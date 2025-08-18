@@ -123,3 +123,39 @@ model Role {
 
   @@map("roles")
 }
+
+model Pagamento {
+  id            Int        @id @default(autoincrement())
+  status        Status     @default(ACTIVE)
+  reference_id  String     @unique
+  checkoutId    String     @unique
+  createdAt     DateTime   @default(now())
+  endedAt       DateTime?
+  amount        Int?
+  amountPayed   Int?
+  paymentMethod String?
+  willReceive   Int?
+  payer         String?
+  billing       Cobranca[]
+
+  @@map("pagamentos")
+}
+
+model Cobranca {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  startDate   DateTime?
+  endDate     DateTime?
+  period      String
+  billingDate DateTime?
+  payment     Pagamento @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  paymentId   Int
+}
+
+enum Status {
+  PAID
+  ACTIVE
+  DECLINED
+  CANCELLED
+  REFUNDED
+}

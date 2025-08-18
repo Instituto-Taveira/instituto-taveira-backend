@@ -3,6 +3,7 @@ import { AuthModule } from './auth.module';
 import { PagamentoController } from 'src/controllers/pagamento.controller';
 import PagamentoService from 'src/services/pagamento.service';
 import { PagamentoRepository } from 'src/repository/pagamento/pagamento.repository';
+import { IPagamentoRepository } from 'src/repository/pagamento/pagamento.repository.contract';
 
 @Module({
     controllers: [PagamentoController],
@@ -10,10 +11,10 @@ import { PagamentoRepository } from 'src/repository/pagamento/pagamento.reposito
     providers: [
         PagamentoService,
         {
-            provide: 'IPagamentoRepository',
+            provide: IPagamentoRepository,
             useClass: PagamentoRepository,
         },
     ],
-    exports: [PagamentoService],
+    exports: [PagamentoService, IPagamentoRepository],
 })
 export class PagamentoModule { }
