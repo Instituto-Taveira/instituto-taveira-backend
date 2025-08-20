@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { IsPublic } from "src/decorators/public.decorator";
 import { CobrancaService } from "src/services/cobranca.service";
 
@@ -7,9 +7,19 @@ export class CobrancaController {
     constructor(
         private readonly cobrancaService: CobrancaService) { }
 
-    @IsPublic()
+    @Post()
+    async createManual(@Body() data: any): Promise<any> {
+        try {
+            return await this.cobrancaService.createCobranca(data, null);
+
+        } catch (error) {
+            console.log(error)
+            throw new HttpException('Erro ao criar cobrança', HttpStatus.BAD_REQUEST)
+        }
+    }
+
     @Get()
-    async list(): Promise<any> {
+    async listAll(): Promise<any> {
         try {
             return await this.cobrancaService.getAll();
 

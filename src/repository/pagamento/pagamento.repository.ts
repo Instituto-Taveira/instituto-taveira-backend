@@ -21,7 +21,20 @@ export class PagamentoRepository implements IPagamentoRepository {
             id: payment.id
         }
 
+    };
+
+    async createManual(data: CreatePaymentDto): Promise<{ id: number; }> {
+        const payment = await this.prisma.pagamento.create({
+            data: {
+                ...data
+            }
+        });
+
+        return {
+            id: payment.id
+        }
     }
+
 
     async updateStatus(
         reference_id: string,

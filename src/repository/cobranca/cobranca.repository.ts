@@ -5,8 +5,28 @@ import { Injectable } from "@nestjs/common";
 @Injectable()
 export class CobrancaRepository implements ICobrancaRepository {
     constructor(private prisma: PrismaService) { }
+
+    async create(data: any, paymentId: number): Promise<any> {
+
+        console.log(data);
+
+        return await this.prisma.cobranca.create({
+            data: {
+                period: data.period,
+                billingDate: data.billingDate,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                payment: {
+                    connect: {
+                        id: paymentId
+                    }
+                }
+            }
+        })
+    }
+
     async listAll() {
-        const charges = await this.prisma.cobranca.findMany({
+        return await this.prisma.cobranca.findMany({
             select: {
                 id: true,
                 createdAt: true,
@@ -16,24 +36,11 @@ export class CobrancaRepository implements ICobrancaRepository {
                 period: true,
                 payment: {
                     select: {
+                        id: true,
                         status: true,
-                        checkoutId: true
                     }
                 },
             }
         })
-
-        return charges.map(char => {
-            return {
-                id: char.id,
-                createdAt: char.createdAt,
-                startDate: char.startDate,
-                endDate: char.endDate,
-                billingDate: char.billingDate,
-                period: char.period,
-                payment: char.payment.status
-            }
-        })
-
     }
 }

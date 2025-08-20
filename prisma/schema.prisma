@@ -150,6 +150,8 @@ model Cobranca {
   billingDate DateTime?
   payment     Pagamento @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   paymentId   Int
+
+  @@map("cobrancas")
 }
 
 enum Status {

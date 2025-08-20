@@ -9,7 +9,6 @@ export class PagamentoController {
     constructor(
         private readonly pagamentoService: PagamentoService) { }
 
-    @IsPublic()
     @Get('criar')
     async create(): Promise<{}> {
         try {
@@ -23,11 +22,9 @@ export class PagamentoController {
         }
     }
 
-    @IsPublic()
     @Get('verificar/:id')
     async verify(@Param('id') paymentId: number): Promise<{}> {
         try {
-            console.log(paymentId);
             return await this.pagamentoService.verifyCheckout(+paymentId);
         } catch (error) {
             if (error instanceof Error) {
@@ -37,7 +34,6 @@ export class PagamentoController {
         }
     }
 
-    @IsPublic()
     @Get('')
     async getAll(): Promise<ResponseGetPayments[]> {
         try {

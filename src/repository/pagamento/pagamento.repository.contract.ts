@@ -4,6 +4,7 @@ import { ResponseGetPayments } from "src/dto/pagamento/reponse.get.payments.dto"
 
 export interface IPagamentoRepository {
     create(data: CreatePaymentDto): Promise<{ id: number }>;
+    createManual(data: CreatePaymentDto): Promise<{ id: number }>
     updateStatus(
         reference_id: string,
         status: Prisma.EnumStatusFieldUpdateOperationsInput,

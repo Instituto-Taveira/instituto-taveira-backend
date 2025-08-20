@@ -5,21 +5,21 @@ import { CobrancaRepository } from 'src/repository/cobranca/cobranca.repository'
 import { CobrancaController } from 'src/controllers/cobranca.controller';
 import PagamentoService from 'src/services/pagamento.service';
 import { PagamentoModule } from './pagamento.module';
+import { ICobrancaRepository } from 'src/repository/cobranca/cobranca.repository.contract';
 
 @Module({
     controllers: [CobrancaController],
     imports: [
         forwardRef(() => AuthModule),
-        PagamentoModule
+        forwardRef(() => PagamentoModule)
     ],
     providers: [
-        PagamentoService,
         CobrancaService,
         {
-            provide: 'ICobrancaRepository',
+            provide: ICobrancaRepository,
             useClass: CobrancaRepository,
         },
     ],
-    exports: [CobrancaService],
+    exports: [CobrancaService, ICobrancaRepository],
 })
 export class CobrancaModule { }
