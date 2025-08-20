@@ -28,8 +28,8 @@ export class CobrancaService {
     }
   }
 
-  //@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  @Cron('*/20 * * * * *') // para testar a cada 30 segundos
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  //@Cron('*/20 * * * * *') // para testar a cada 30 segundos
   async processarCobrancas() {
     this.logger.log('Iniciando verificação de cobranças...');
 
