@@ -19,6 +19,7 @@ export default class PagamentoService {
 
     private readonly TOKEN = process.env.PAGSEGURO_TOKEN;
     private readonly BASE_URL = process.env.PAGSEGURO_BASE_URL;
+    private readonly WEBHOOK_PAGBANK_URL = process.env.WEBHOOK_PAGBANK_URL;
 
     async calcularValorAssinatura(periodo: string): Promise<number> {
         const valorMensal = 5000; // R$50,00 em centavos
@@ -176,7 +177,7 @@ export default class PagamentoService {
                             unit_amount: 5000,
                         },
                     ],
-                    payment_notification_urls: ['https://2710d7213034.ngrok-free.app/pagamentos/webhook'],
+                    payment_notification_urls: [this.WEBHOOK_PAGBANK_URL],
                 },
                 {
                     headers: {
@@ -213,7 +214,7 @@ export default class PagamentoService {
                             unit_amount: paymentValue,
                         },
                     ],
-                    payment_notification_urls: ['https://2710d7213034.ngrok-free.app/pagamentos/webhook'],
+                    payment_notification_urls: [this.WEBHOOK_PAGBANK_URL],
                 },
                 {
                     headers: {
