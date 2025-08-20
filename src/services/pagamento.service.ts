@@ -22,7 +22,7 @@ export default class PagamentoService {
     private readonly WEBHOOK_PAGBANK_URL = process.env.WEBHOOK_PAGBANK_URL;
 
     async calcularValorAssinatura(periodo: string): Promise<number> {
-        const valorMensal = 5000; // R$50,00 em centavos
+        const valorMensal = 100; // R$50,00 em centavos
 
         switch (periodo) {
             case 'MENSAL':
