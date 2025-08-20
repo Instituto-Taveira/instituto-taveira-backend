@@ -177,7 +177,7 @@ export default class PagamentoService {
                             unit_amount: 5000,
                         },
                     ],
-                    payment_notification_urls: [this.WEBHOOK_PAGBANK_URL],
+                    payment_notification_urls: [`${this.WEBHOOK_PAGBANK_URL}`],
                 },
                 {
                     headers: {
@@ -214,7 +214,7 @@ export default class PagamentoService {
                             unit_amount: paymentValue,
                         },
                     ],
-                    payment_notification_urls: [this.WEBHOOK_PAGBANK_URL],
+                    payment_notification_urls: [`${this.WEBHOOK_PAGBANK_URL}`],
                 },
                 {
                     headers: {
