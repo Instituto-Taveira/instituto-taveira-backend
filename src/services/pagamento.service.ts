@@ -4,17 +4,13 @@ import axios from 'axios';
 import { CreatePaymentDto } from 'src/dto/pagamento/create.payment.dto';
 import { ResponseGetPayments } from 'src/dto/pagamento/reponse.get.payments.dto';
 import { ResponsePaymentDto } from 'src/dto/pagamento/response.payment.dto';
-import { ICobrancaRepository } from 'src/repository/cobranca/cobranca.repository.contract';
 import { IPagamentoRepository } from 'src/repository/pagamento/pagamento.repository.contract';
-import { CobrancaService } from './cobranca.service';
 
 @Injectable()
 export default class PagamentoService {
     constructor(
         @Inject(IPagamentoRepository)
         private readonly pagamentoRepository: IPagamentoRepository,
-        @Inject(forwardRef(() => CobrancaService))
-        private readonly cobrancaService: CobrancaService,
     ) { }
 
     private readonly TOKEN = process.env.PAGSEGURO_TOKEN;
@@ -128,7 +124,6 @@ export default class PagamentoService {
                                 charge.customer?.name || null,
                                 charge.payment_method?.type || null,
                                 response.data.items[0].unit_amount,
-                                charge.amount.value || null
                             )
 
                             await this.invalidateCheckout(payment.checkoutId);
@@ -163,6 +158,7 @@ export default class PagamentoService {
 
     async create(): Promise<{ id: number }> {
         try {
+            const paymentValue = await this.calcularValorAssinatura('MENSAL');
             const mesAtual = new Date().getMonth() + 1;
             const anoAtual = new Date().getFullYear();
             const ref_id = `assinatura_taveira_${Date.now().toString()}_${mesAtual}_${anoAtual}`;
@@ -174,7 +170,7 @@ export default class PagamentoService {
                         {
                             name: `Assinatura mensal - Instituto Taveira - Mês ${mesAtual}`,
                             quantity: 1,
-                            unit_amount: 5000,
+                            unit_amount: paymentValue,
                         },
                     ],
                     payment_notification_urls: [`${this.WEBHOOK_PAGBANK_URL}`],
@@ -190,6 +186,7 @@ export default class PagamentoService {
             const data = {
                 reference_id: ref_id,
                 checkoutId: response.data.id,
+                amount: paymentValue
             }
 
             return this.pagamentoRepository.create(data);
@@ -227,11 +224,13 @@ export default class PagamentoService {
             const data = {
                 reference_id: ref_id,
                 checkoutId: response.data.id,
+                amount: paymentValue,
             }
 
             return await this.pagamentoRepository.create(data);
 
         } catch (error) {
+            console.log(error);
             throw new Error(`Error creating payment: ${error.message}`);
         }
     };
@@ -241,7 +240,6 @@ export default class PagamentoService {
         status: Prisma.EnumStatusFieldUpdateOperationsInput,
         payer: string,
         paymentMethod: string,
-        amount: number,
         amountPayed: number
 
     ): Promise<void> {
@@ -251,7 +249,6 @@ export default class PagamentoService {
                 status,
                 payer,
                 paymentMethod,
-                amount,
                 amountPayed
             );
         } catch (error) {

@@ -41,7 +41,6 @@ export class PagamentoRepository implements IPagamentoRepository {
         status: Prisma.EnumStatusFieldUpdateOperationsInput,
         payer: string,
         paymentMethod: string,
-        amount: number,
         amountPayed: number
     ): Promise<any> {
 
@@ -54,7 +53,6 @@ export class PagamentoRepository implements IPagamentoRepository {
                 payer: payer,
                 endedAt: new Date(),
                 paymentMethod: paymentMethod,
-                amount: amount,
                 amountPayed: amountPayed
             }
         })

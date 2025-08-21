@@ -38,6 +38,7 @@ export class CobrancaRepository implements ICobrancaRepository {
                     select: {
                         id: true,
                         status: true,
+                        amount: true,
                     }
                 },
             }

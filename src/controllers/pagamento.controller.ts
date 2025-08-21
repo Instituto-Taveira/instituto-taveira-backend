@@ -60,10 +60,9 @@ export class PagamentoController {
                 const status = payload.charges[0].status;
                 const payer = payload.customer?.name || null;
                 const paymentMethod = payload.charges[0].payment_method?.type || null;
-                const amount = payload.items[0].unit_amount;
                 const amountPayed = payload.charges[0].amount.value || null
 
-                return await this.pagamentoService.updateStatus(reference_id, status, payer, paymentMethod, amount, amountPayed);
+                return await this.pagamentoService.updateStatus(reference_id, status, payer, paymentMethod, amountPayed);
             }
 
         } catch (error) {

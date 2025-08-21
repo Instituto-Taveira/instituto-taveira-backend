@@ -10,7 +10,6 @@ export interface IPagamentoRepository {
         status: Prisma.EnumStatusFieldUpdateOperationsInput,
         payer: string,
         paymentMethod: string,
-        amount: number,
         amountPayed: number
     ): Promise<void>;
     findAllPayments(): Promise<ResponseGetPayments[]>;
