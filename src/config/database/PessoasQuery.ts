@@ -19,7 +19,7 @@ function valores(v: Valor): string[] {
 export function temFiltroDePessoa(f: Partial<FiltersPessoaDTO>): boolean {
       return Boolean(
             f.nome || f.cpf || f.rg || f.whatsapp || f.modalidade || f.vinculo ||
-            f.initialDate || f.finalDate,
+            f.idade || f.initialDate || f.finalDate,
       );
 }
 
@@ -31,18 +31,34 @@ function condicoesComuns(
       const c: Prisma.Sql[] = [];
       const col = (nome: string) => Prisma.raw(`"${alias}"."${nome}"`);
 
-      // Cada filtro adiciona uma condicao; todas valem juntas (AND), entao
-      // filtrar uma coluna e depois outra vai estreitando o resultado.
+      // Colunas diferentes se somam (AND); varios valores marcados na MESMA
+      // coluna sao alternativas (OR), como as caixinhas de uma planilha.
       const contem = (campo: string, v: Valor) => {
-            for (const valor of valores(v)) {
-                  c.push(Prisma.sql`${col(campo)} ILIKE ${'%' + valor + '%'}`);
-            }
+            const lista = valores(v);
+            if (!lista.length) return;
+            const alternativas = lista.map(
+                  valor => Prisma.sql`${col(campo)} ILIKE ${'%' + valor + '%'}`,
+            );
+            c.push(Prisma.sql`(${Prisma.join(alternativas, ' OR ')})`);
       };
 
       contem('nome', f.nome as Valor);
       contem('cpf', f.cpf as Valor);
       contem('rg', f.rg as Valor);
       contem('whatsapp', f.whatsapp as Valor);
+
+      // Idade em anos, calculada no banco: aceita varias idades marcadas.
+      const idades = valores(f.idade as Valor)
+            .map(x => Number(x))
+            .filter(n => Number.isInteger(n) && n >= 0);
+      if (idades.length) {
+            const alternativas = idades.map(
+                  // ::int e obrigatorio: date_part devolve double precision e
+                  // o parametro chega como int, entao a comparacao nunca casa.
+                  n => Prisma.sql`date_part('year', age(${col('dataNascimento')}))::int = ${n}`,
+            );
+            c.push(Prisma.sql`(${Prisma.join(alternativas, ' OR ')})`);
+      }
 
       for (const v of valores(f.initialDate as Valor)) {
             c.push(Prisma.sql`${col('dataNascimento')} >= ${new Date(v)}`);
@@ -90,13 +106,14 @@ function lado(
 
       const cs = condicoesComuns(f, alias);
 
-      // Varias modalidades: a pessoa precisa praticar todas (AND).
-      for (const modalidade of valores(f.modalidade as Valor)) {
+      // Varias modalidades marcadas: praticar qualquer uma delas basta.
+      const modalidades = valores(f.modalidade as Valor).map(m => m.trim().toLowerCase());
+      if (modalidades.length) {
             cs.push(Prisma.sql`EXISTS (
                   SELECT 1 FROM "vinculo_modalidades" v
                     JOIN "modalidades" m ON m."id" = v."modalidadeId"
                    WHERE ${colunaVinculo} = ${Prisma.raw(`"${alias}"."id"`)}
-                     AND lower(m."nome") = lower(${modalidade.trim()})
+                     AND lower(m."nome") IN (${Prisma.join(modalidades)})
             )`);
       }
 
@@ -140,10 +157,6 @@ export function valoresDaColuna(
 ): Prisma.Sql {
       const semEleMesmo: Partial<FiltersPessoaDTO> = { ...f };
       delete semEleMesmo[campo as keyof FiltersPessoaDTO];
-      if (campo === 'idade') {
-            delete semEleMesmo.initialDate;
-            delete semEleMesmo.finalDate;
-      }
 
       const base = unicaoDePessoas(semEleMesmo, campo);
       // Teto de seguranca: uma coluna como Nome pode ter milhares de valores
@@ -161,11 +174,13 @@ export function unicaoDePessoas(
       f: Partial<FiltersPessoaDTO>,
       campoValor?: CampoFiltravel,
 ): Prisma.Sql {
-      const vinculo = valores(f.vinculo as Valor)[0]?.trim().toLowerCase();
+      const vinculos = valores(f.vinculo as Valor).map(v => v.trim().toLowerCase());
+      const querTitular = !vinculos.length || vinculos.includes('titular');
+      const querDependente = !vinculos.length || vinculos.includes('dependente');
       const partes: Prisma.Sql[] = [];
 
-      if (vinculo !== 'dependente') partes.push(lado(f, 'titular', campoValor));
-      if (vinculo !== 'titular') partes.push(lado(f, 'dependente', campoValor));
+      if (querTitular) partes.push(lado(f, 'titular', campoValor));
+      if (querDependente) partes.push(lado(f, 'dependente', campoValor));
 
       return Prisma.sql`SELECT * FROM (${Prisma.join(partes, ' UNION ALL ')}) pessoas`;
 }

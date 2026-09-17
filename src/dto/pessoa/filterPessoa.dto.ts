@@ -9,6 +9,7 @@ export class FiltersPessoaDTO {
       whatsapp?: string;
       modalidade?: string;
       vinculo?: string; // "Titular" ou "Dependente"
+      idade?: string; // idade em anos
       page?: string;
       limit?: string;
       initialDate?: string; // formato ISO
