@@ -8,6 +8,14 @@ import { FiltersPessoaDTO } from '../../dto/pessoa/filterPessoa.dto';
  * origens e paginamos sobre ela.
  */
 
+/** Um mesmo campo pode vir repetido: cada valor vira mais uma condicao. */
+type Valor = string | string[] | undefined;
+
+function valores(v: Valor): string[] {
+      if (Array.isArray(v)) return v.filter(x => x != null && x !== '');
+      return v != null && v !== '' ? [v] : [];
+}
+
 export function temFiltroDePessoa(f: Partial<FiltersPessoaDTO>): boolean {
       return Boolean(
             f.nome || f.cpf || f.rg || f.whatsapp || f.modalidade || f.vinculo ||
@@ -23,12 +31,25 @@ function condicoesComuns(
       const c: Prisma.Sql[] = [];
       const col = (nome: string) => Prisma.raw(`"${alias}"."${nome}"`);
 
-      if (f.nome) c.push(Prisma.sql`${col('nome')} ILIKE ${'%' + f.nome + '%'}`);
-      if (f.cpf) c.push(Prisma.sql`${col('cpf')} ILIKE ${'%' + f.cpf + '%'}`);
-      if (f.rg) c.push(Prisma.sql`${col('rg')} ILIKE ${'%' + f.rg + '%'}`);
-      if (f.whatsapp) c.push(Prisma.sql`${col('whatsapp')} ILIKE ${'%' + f.whatsapp + '%'}`);
-      if (f.initialDate) c.push(Prisma.sql`${col('dataNascimento')} >= ${new Date(f.initialDate)}`);
-      if (f.finalDate) c.push(Prisma.sql`${col('dataNascimento')} <= ${new Date(f.finalDate)}`);
+      // Cada filtro adiciona uma condicao; todas valem juntas (AND), entao
+      // filtrar uma coluna e depois outra vai estreitando o resultado.
+      const contem = (campo: string, v: Valor) => {
+            for (const valor of valores(v)) {
+                  c.push(Prisma.sql`${col(campo)} ILIKE ${'%' + valor + '%'}`);
+            }
+      };
+
+      contem('nome', f.nome as Valor);
+      contem('cpf', f.cpf as Valor);
+      contem('rg', f.rg as Valor);
+      contem('whatsapp', f.whatsapp as Valor);
+
+      for (const v of valores(f.initialDate as Valor)) {
+            c.push(Prisma.sql`${col('dataNascimento')} >= ${new Date(v)}`);
+      }
+      for (const v of valores(f.finalDate as Valor)) {
+            c.push(Prisma.sql`${col('dataNascimento')} <= ${new Date(v)}`);
+      }
 
       return c;
 }
@@ -47,12 +68,13 @@ function lado(f: Partial<FiltersPessoaDTO>, tipo: 'titular' | 'dependente'): Pri
 
       const cs = condicoesComuns(f, alias);
 
-      if (f.modalidade) {
+      // Varias modalidades: a pessoa precisa praticar todas (AND).
+      for (const modalidade of valores(f.modalidade as Valor)) {
             cs.push(Prisma.sql`EXISTS (
                   SELECT 1 FROM "vinculo_modalidades" v
                     JOIN "modalidades" m ON m."id" = v."modalidadeId"
                    WHERE ${colunaVinculo} = ${Prisma.raw(`"${alias}"."id"`)}
-                     AND lower(m."nome") = lower(${f.modalidade.trim()})
+                     AND lower(m."nome") = lower(${modalidade.trim()})
             )`);
       }
 
@@ -68,7 +90,7 @@ function lado(f: Partial<FiltersPessoaDTO>, tipo: 'titular' | 'dependente'): Pri
 
 /** Uniao das duas origens, respeitando o filtro de vinculo. */
 export function unicaoDePessoas(f: Partial<FiltersPessoaDTO>): Prisma.Sql {
-      const vinculo = f.vinculo?.trim().toLowerCase();
+      const vinculo = valores(f.vinculo as Valor)[0]?.trim().toLowerCase();
       const partes: Prisma.Sql[] = [];
 
       if (vinculo !== 'dependente') partes.push(lado(f, 'titular'));
