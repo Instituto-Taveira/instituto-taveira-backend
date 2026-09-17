@@ -15,7 +15,7 @@ COPY prisma ./prisma/
 
 RUN yarn cache clean --mirror
 
-RUN yarn global add @nestjs/cli --ignore-engines
+RUN yarn global add @nestjs/cli@11.0.5 --ignore-engines
 
 COPY . ./
 
