@@ -8,6 +8,7 @@ export class FiltersPessoaDTO {
       estado?: string;
       whatsapp?: string;
       modalidade?: string;
+      vinculo?: string; // "Titular" ou "Dependente"
       page?: string;
       limit?: string;
       initialDate?: string; // formato ISO

@@ -5,6 +5,7 @@ import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import IPessoaRepository from './pessoa.repository.contract';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { generateQueryByFiltersForPessoa } from 'src/config/database/Queries';
+import { temFiltroDePessoa, unicaoDePessoas } from 'src/config/database/PessoasQuery';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
 import { TitularMapper } from 'src/mappers/pessoa.mapper';
 import { CPF } from 'src/entities/cpf.entity';
@@ -308,58 +309,34 @@ export class PessoaRepository implements IPessoaRepository {
 
             const where = generateQueryByFiltersForPessoa(filters as FiltersPessoaDTO);
 
-            // Filtrando por modalidade, a unidade da lista e a PESSOA (titular
-            // ou dependente), nao o titular. Contar titulares daria um numero
+            // Com qualquer filtro, a unidade da lista e a PESSOA (titular ou
+            // dependente), nao o titular: contar titulares daria um numero
             // menor que o da tela de Modalidades, que conta pessoas.
-            const modalidadeFiltrada = filters.modalidade?.trim();
+            const filtrandoPessoas = temFiltroDePessoa(filters);
             let idsTitularesDaPagina: number[] | null = null;
             let totalPessoas: number | null = null;
             // quem, nesta pagina, de fato corresponde ao filtro
             let titularesDaPagina = new Set<number>();
             let dependentesDaPagina = new Set<number>();
 
-            if (modalidadeFiltrada) {
+            if (filtrandoPessoas) {
+                  const uniao = unicaoDePessoas(filters);
+
                   const pessoas = await this.repository.$queryRaw<
                         { tipo: string; id: number; titular_id: number }[]
-                  >`
-                        SELECT tipo, id, titular_id FROM (
-                              SELECT 'titular' AS tipo, t.id AS id, t.id AS titular_id, t.nome AS nome
-                                FROM titulares t
-                                JOIN vinculo_modalidades v ON v."titularId" = t.id
-                                JOIN modalidades m ON m.id = v."modalidadeId"
-                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
-                              UNION ALL
-                              SELECT 'dependente' AS tipo, d.id AS id, d."titularId" AS titular_id, d.nome AS nome
-                                FROM dependentes d
-                                JOIN vinculo_modalidades v ON v."dependenteId" = d.id
-                                JOIN modalidades m ON m.id = v."modalidadeId"
-                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
-                        ) pessoas
-                        ORDER BY nome ASC
-                        LIMIT ${limit} OFFSET ${skip}
-                  `;
+                  >`${uniao} ORDER BY nome ASC LIMIT ${limit} OFFSET ${skip}`;
 
-                  const [{ count }] = await this.repository.$queryRaw<{ count: bigint }[]>`
-                        SELECT count(*) AS count FROM (
-                              SELECT t.id FROM titulares t
-                                JOIN vinculo_modalidades v ON v."titularId" = t.id
-                                JOIN modalidades m ON m.id = v."modalidadeId"
-                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
-                              UNION ALL
-                              SELECT d.id FROM dependentes d
-                                JOIN vinculo_modalidades v ON v."dependenteId" = d.id
-                                JOIN modalidades m ON m.id = v."modalidadeId"
-                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
-                        ) pessoas
-                  `;
+                  const [{ count }] = await this.repository.$queryRaw<
+                        { count: bigint }[]
+                  >`SELECT count(*) AS count FROM (${uniao}) total`;
 
                   totalPessoas = Number(count);
                   idsTitularesDaPagina = [...new Set(pessoas.map(p => p.titular_id))];
-                  dependentesDaPagina = new Set(
-                        pessoas.filter(p => p.tipo === 'dependente').map(p => p.id),
-                  );
                   titularesDaPagina = new Set(
                         pessoas.filter(p => p.tipo === 'titular').map(p => p.id),
+                  );
+                  dependentesDaPagina = new Set(
+                        pessoas.filter(p => p.tipo === 'dependente').map(p => p.id),
                   );
             }
 
@@ -437,8 +414,8 @@ export class PessoaRepository implements IPessoaRepository {
             // praticam saem da lista.
             // mapeia para o formato HTTP
             const data = rawData.map(item => {
-                  const titularCorresponde = !modalidadeFiltrada || titularesDaPagina.has(item.id);
-                  const dependentesVisiveis = modalidadeFiltrada
+                  const titularCorresponde = !filtrandoPessoas || titularesDaPagina.has(item.id);
+                  const dependentesVisiveis = filtrandoPessoas
                         ? item.Dependente.filter(dep => dependentesDaPagina.has(dep.id))
                         : item.Dependente;
 
@@ -478,7 +455,7 @@ export class PessoaRepository implements IPessoaRepository {
 
                   return {
                         ...pessoaHttp,
-                        numeroDependentes: modalidadeFiltrada
+                        numeroDependentes: filtrandoPessoas
                               ? dependentesVisiveis.length
                               : item._count.Dependente,
                         // false => o titular nao pratica a modalidade filtrada e
