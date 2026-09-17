@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, HttpException, HttpStatus, Param, Patch, Post, Request } from "@nestjs/common";
 import { IsPublic } from "src/decorators/public.decorator";
 import { ResponseGetPayments } from "src/dto/pagamento/reponse.get.payments.dto";
 import { PagSeguroFullNotificationDto, PagSeguroSimpleNotificationDto } from "src/dto/pagamento/update.status.payment.dto";
@@ -40,6 +40,25 @@ export class PagamentoController {
             return await this.pagamentoService.findAll();
         } catch (error) {
             throw new HttpException('Erro ao retornar pagamentos', HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    // Baixa manual: marca o pagamento como pago na mao. Apenas o dono do
+    // sistema (papel 'owner') pode fazer, e o banco registra quem deu a baixa.
+    @Patch('baixa-manual/:id')
+    async baixaManual(@Param('id') paymentId: number, @Request() req: any): Promise<{ message: string }> {
+        const usuario = req.user;
+        if (!usuario || usuario.role !== 'owner') {
+            throw new ForbiddenException('Apenas o dono do sistema pode dar baixa manual.');
+        }
+        try {
+            await this.pagamentoService.baixaManual(+paymentId, usuario.name || usuario.login);
+            return { message: 'Pagamento baixado manualmente.' };
+        } catch (error) {
+            throw new HttpException(
+                error instanceof Error ? error.message : 'Erro ao dar baixa manual',
+                HttpStatus.BAD_REQUEST,
+            );
         }
     }
 

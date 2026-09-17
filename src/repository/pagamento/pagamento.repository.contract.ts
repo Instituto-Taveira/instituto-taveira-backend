@@ -14,6 +14,7 @@ export interface IPagamentoRepository {
     ): Promise<void>;
     findAllPayments(): Promise<ResponseGetPayments[]>;
     findPaymentById(paymentId: number): Promise<ResponseGetPayments>;
+    baixaManual(paymentId: number, quem: string): Promise<any>;
 }
 
 export const IPagamentoRepository = Symbol('IPagamentoRepository');

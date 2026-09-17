@@ -17,6 +17,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                   });
             }
 
+            // papel do dono do sistema: acesso total, fica de fora da lista de
+            // usuarios. Criado aqui de forma aberta (versionado, sem senha no
+            // codigo); a conta em si e criada com credenciais fornecidas pelo
+            // dono, nunca cravadas aqui.
+            const owner = await this.role.findFirst({ where: { name: 'owner' } });
+            if (!owner) {
+                  await this.role.create({ data: { name: 'owner' } });
+            }
+
             const admin = await this.usuario.findFirst({
                   where: {
                         login: 'adm@gmail.com',

@@ -36,6 +36,29 @@ export class PagamentoRepository implements IPagamentoRepository {
     }
 
 
+    async baixaManual(paymentId: number, quem: string): Promise<any> {
+        const pagamento = await this.prisma.pagamento.findUnique({
+            where: { id: paymentId },
+        });
+        if (!pagamento) {
+            throw new Error('Pagamento nao encontrado');
+        }
+
+        // marca como pago, registrando que foi na mao e por quem
+        return await this.prisma.pagamento.update({
+            where: { id: paymentId },
+            data: {
+                status: { set: 'PAID' },
+                paymentMethod: 'MANUAL',
+                amountPayed: pagamento.amount ?? null,
+                endedAt: new Date(),
+                paidManually: true,
+                paidManuallyBy: quem,
+                paidManuallyAt: new Date(),
+            },
+        });
+    }
+
     async updateStatus(
         reference_id: string,
         status: Prisma.EnumStatusFieldUpdateOperationsInput,

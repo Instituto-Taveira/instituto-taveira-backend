@@ -256,6 +256,14 @@ export default class PagamentoService {
         }
     }
 
+    async baixaManual(paymentId: number, quem: string): Promise<void> {
+        try {
+            await this.pagamentoRepository.baixaManual(paymentId, quem);
+        } catch (error) {
+            throw new Error(`Erro ao dar baixa manual: ${error.message}`);
+        }
+    }
+
     async findAll(): Promise<ResponseGetPayments[]> {
         try {
             return await this.pagamentoRepository.findAllPayments();

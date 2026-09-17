@@ -45,6 +45,12 @@ export class UserRepository implements IUserRepository {
 
       async findAll(): Promise<Partial<User>[]> {
             return await this.repository.usuario.findMany({
+                  // o dono do sistema (papel 'owner') nao aparece na listagem
+                  where: {
+                        role: {
+                              isNot: { name: 'owner' },
+                        },
+                  },
                   select: {
                         id: true,
                         name: true,

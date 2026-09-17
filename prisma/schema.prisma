@@ -136,6 +136,11 @@ model Pagamento {
   paymentMethod String?
   willReceive   Int?
   payer         String?
+  // baixa manual dada pelo dono do sistema: registra que foi pago na mao e
+  // por quem, para auditoria
+  paidManually     Boolean   @default(false)
+  paidManuallyBy   String?
+  paidManuallyAt   DateTime?
   billing       Cobranca[]
 
   @@map("pagamentos")
