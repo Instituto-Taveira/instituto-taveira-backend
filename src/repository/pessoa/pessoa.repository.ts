@@ -372,8 +372,22 @@ export class PessoaRepository implements IPessoaRepository {
                   take: limit,
             });
 
+            // Com filtro de modalidade, a lista deve mostrar so quem pratica.
+            // A consulta traz o titular quando ele OU um dependente pratica,
+            // porque o dependente vem aninhado nele; aqui separamos quem de
+            // fato corresponde: o titular e marcado, e os dependentes que nao
+            // praticam saem da lista.
+            const modalidadeFiltrada = filters.modalidade?.trim().toLowerCase();
+            const pratica = (mods: { modalidade: { nome: string } }[]) =>
+                  mods.some(vm => vm.modalidade.nome.trim().toLowerCase() === modalidadeFiltrada);
+
             // mapeia para o formato HTTP
             const data = rawData.map(item => {
+                  const titularCorresponde = !modalidadeFiltrada || pratica(item.VinculoModalidade);
+                  const dependentesVisiveis = modalidadeFiltrada
+                        ? item.Dependente.filter(dep => pratica(dep.VinculoModalidade))
+                        : item.Dependente;
+
                   const pessoaHttp = TitularMapper.toHttp({
                         id: item.id,
                         nome: item.nome,
@@ -388,7 +402,7 @@ export class PessoaRepository implements IPessoaRepository {
                         updatedAt: item.updatedAt,
                         modalidade: item.VinculoModalidade.map(vm => vm.modalidade.nome),
                         tipoVinculo: 'Titular',
-                        dependentes: item.Dependente.map(dep => ({
+                        dependentes: dependentesVisiveis.map(dep => ({
                               id: dep.id,
                               nome: dep.nome,
                               dataNascimento: dep.dataNascimento,
@@ -410,7 +424,12 @@ export class PessoaRepository implements IPessoaRepository {
 
                   return {
                         ...pessoaHttp,
-                        numeroDependentes: item._count.Dependente,
+                        numeroDependentes: modalidadeFiltrada
+                              ? dependentesVisiveis.length
+                              : item._count.Dependente,
+                        // false => o titular nao pratica a modalidade filtrada e
+                        // so esta aqui para carregar os dependentes que praticam
+                        correspondeAoFiltro: titularCorresponde,
                   };
             });
 
