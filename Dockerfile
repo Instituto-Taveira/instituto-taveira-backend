@@ -1,4 +1,4 @@
-FROM node:20.12.1
+FROM node:20.19.0
 
 ARG NODE_ENV
 ARG PORT
