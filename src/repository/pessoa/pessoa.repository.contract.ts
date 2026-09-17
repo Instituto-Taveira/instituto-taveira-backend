@@ -9,6 +9,7 @@ export default interface IPessoaRepository {
       findById(id: number): Promise<Titular | null>;
       findBirthDays(): Promise<{ pessoas: any[]; dependentes: any[] }>;
       findByCPF(cpf: string): Promise<Titular | null>;
+      valoresDeColuna(campo: any, filters?: any): Promise<string[]>;
       findAll(
             filters?: FiltersPessoaDTO,
       ): Promise<PaginatedResult<Partial<Titular>>>;

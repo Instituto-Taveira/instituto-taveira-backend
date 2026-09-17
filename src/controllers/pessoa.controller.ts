@@ -1,4 +1,5 @@
 import {
+      BadRequestException,
       Body,
       Controller,
       Delete,
@@ -17,6 +18,7 @@ import { DomainExceptionFilter } from 'src/common/filters/domain-exception.filte
 import { RolesGuard } from 'src/config/authentication/guards/roles.guard';
 import { IsPublic } from 'src/decorators/public.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
+import { CAMPOS_FILTRAVEIS } from 'src/config/database/PessoasQuery';
 import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { UpdatePessoaDTO } from 'src/dto/pessoa/updatePessoa.dto';
@@ -52,6 +54,25 @@ export class PessoaController {
             description:
                   'Utilize este endpoint para buscar uma pessoa pelo ID.',
       })
+      @ApiOperation({
+            summary: 'Valores de uma coluna',
+            description:
+                  'Valores existentes numa coluna, considerando os filtros das demais.',
+      })
+      @Get('valores')
+      async valoresDeColuna(
+            @Query('campo') campo: string,
+            @Query() filters?: FiltersPessoaDTO,
+      ) {
+            const permitidos = CAMPOS_FILTRAVEIS as readonly string[];
+            if (!campo || !permitidos.includes(campo)) {
+                  throw new BadRequestException(
+                        `campo deve ser um de: ${permitidos.join(', ')}`,
+                  );
+            }
+            return this.pessoaService.valoresDeColuna(campo, filters);
+      }
+
       @Get(':id')
       //   @UseGuards(JwtAuthGuard)
       async findById(@Param('id') id: number): Promise<Titular> {

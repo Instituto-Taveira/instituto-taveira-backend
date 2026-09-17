@@ -75,6 +75,13 @@ export class PessoaService {
             return await this.pessoaRepository.findAll(filters);
       }
 
+      async valoresDeColuna(
+            campo: string,
+            filters: FiltersPessoaDTO,
+      ): Promise<string[]> {
+            return await this.pessoaRepository.valoresDeColuna(campo, filters);
+      }
+
       async update(id: number, data: UpdatePessoaDTO): Promise<void> {
             const pessoa = await this.pessoaRepository.findById(id);
 

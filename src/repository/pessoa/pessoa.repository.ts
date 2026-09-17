@@ -5,7 +5,14 @@ import { CreatePessoaDTO } from 'src/dto/pessoa/createPessoa.dto';
 import IPessoaRepository from './pessoa.repository.contract';
 import { FiltersPessoaDTO } from 'src/dto/pessoa/filterPessoa.dto';
 import { generateQueryByFiltersForPessoa } from 'src/config/database/Queries';
-import { temFiltroDePessoa, unicaoDePessoas } from 'src/config/database/PessoasQuery';
+import {
+      CampoFiltravel,
+      LIMITE_DE_VALORES,
+      temFiltroDePessoa,
+      unicaoDePessoas,
+      valoresDaColuna,
+} from 'src/config/database/PessoasQuery';
+import { Prisma } from '@prisma/client';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
 import { TitularMapper } from 'src/mappers/pessoa.mapper';
 import { CPF } from 'src/entities/cpf.entity';
@@ -297,6 +304,47 @@ export class PessoaRepository implements IPessoaRepository {
 
             const pessoa = TitularMapper.toEntity(foundByCpf);
             return TitularMapper.toHttp(pessoa);
+      }
+
+      /**
+       * Valores que ainda aparecem numa coluna, ja considerando os filtros das
+       * outras. E o que alimenta a lista de opcoes do filtro daquela coluna.
+       */
+      async valoresDeColuna(
+            campo: CampoFiltravel,
+            filters: Partial<FiltersPessoaDTO> = {},
+      ): Promise<string[]> {
+            if (campo === 'modalidade') {
+                  // modalidade vive noutra tabela: lista as praticadas por quem
+                  // passa nos demais filtros
+                  const semEla: Partial<FiltersPessoaDTO> = { ...filters };
+                  delete semEla.modalidade;
+                  const pessoas = unicaoDePessoas(semEla);
+
+                  const linhas = await this.repository.$queryRaw<{ nome: string }[]>`
+                        SELECT DISTINCT m."nome" AS nome
+                          FROM (${pessoas}) p
+                          JOIN "vinculo_modalidades" v
+                            ON (p.tipo = 'titular' AND v."titularId" = p.id)
+                            OR (p.tipo = 'dependente' AND v."dependenteId" = p.id)
+                          JOIN "modalidades" m ON m."id" = v."modalidadeId"
+                         ORDER BY m."nome" ASC
+                         LIMIT ${LIMITE_DE_VALORES}
+                  `;
+                  return linhas.map(l => l.nome);
+            }
+
+            const linhas = await this.repository.$queryRaw<{ valor: string }[]>(
+                  valoresDaColuna(campo, filters) as Prisma.Sql,
+            );
+
+            if (campo === 'idade') {
+                  // ordena como numero, nao como texto
+                  return linhas
+                        .map(l => l.valor)
+                        .sort((a, b) => Number(a) - Number(b));
+            }
+            return linhas.map(l => l.valor);
       }
 
       async findAll(
