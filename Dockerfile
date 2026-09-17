@@ -1,4 +1,4 @@
-FROM node:20.19.0
+FROM node:20.12.1
 
 ARG NODE_ENV
 ARG PORT
@@ -15,7 +15,7 @@ COPY prisma ./prisma/
 
 RUN yarn cache clean --mirror
 
-RUN yarn global add @nestjs/cli
+RUN yarn global add @nestjs/cli --ignore-engines
 
 COPY . ./
 
