@@ -7,6 +7,7 @@ export class FiltersPessoaDTO {
       bairro?: string;
       estado?: string;
       whatsapp?: string;
+      modalidade?: string;
       page?: string;
       limit?: string;
       initialDate?: string; // formato ISO

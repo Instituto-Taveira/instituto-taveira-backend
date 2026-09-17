@@ -36,6 +36,49 @@ export function generateQueryByFiltersForPessoa(
             query.OR = orFilters;
       }
 
+      // Modalidade vive numa tabela de vinculo, entao nao entra no OR dos
+      // campos de texto: e uma condicao a parte, valida para o titular ou
+      // para qualquer dependente dele.
+      if (filters.modalidade) {
+            const porModalidade: Prisma.TitularWhereInput = {
+                  OR: [
+                        {
+                              VinculoModalidade: {
+                                    some: {
+                                          modalidade: {
+                                                nome: {
+                                                      equals: filters.modalidade,
+                                                      mode: 'insensitive',
+                                                },
+                                          },
+                                    },
+                              },
+                        },
+                        {
+                              Dependente: {
+                                    some: {
+                                          VinculoModalidade: {
+                                                some: {
+                                                      modalidade: {
+                                                            nome: {
+                                                                  equals: filters.modalidade,
+                                                                  mode: 'insensitive',
+                                                            },
+                                                      },
+                                                },
+                                          },
+                                    },
+                              },
+                        },
+                  ],
+            };
+
+            // AND para nao afrouxar um filtro de texto que ja tenha sido aplicado
+            query.AND = query.AND
+                  ? [...(Array.isArray(query.AND) ? query.AND : [query.AND]), porModalidade]
+                  : [porModalidade];
+      }
+
       if (filters.initialDate || filters.finalDate) {
             query.dataNascimento = {};
             if (filters.initialDate) {
