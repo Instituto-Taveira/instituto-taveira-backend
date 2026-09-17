@@ -308,12 +308,70 @@ export class PessoaRepository implements IPessoaRepository {
 
             const where = generateQueryByFiltersForPessoa(filters as FiltersPessoaDTO);
 
+            // Filtrando por modalidade, a unidade da lista e a PESSOA (titular
+            // ou dependente), nao o titular. Contar titulares daria um numero
+            // menor que o da tela de Modalidades, que conta pessoas.
+            const modalidadeFiltrada = filters.modalidade?.trim();
+            let idsTitularesDaPagina: number[] | null = null;
+            let totalPessoas: number | null = null;
+            // quem, nesta pagina, de fato corresponde ao filtro
+            let titularesDaPagina = new Set<number>();
+            let dependentesDaPagina = new Set<number>();
+
+            if (modalidadeFiltrada) {
+                  const pessoas = await this.repository.$queryRaw<
+                        { tipo: string; id: number; titular_id: number }[]
+                  >`
+                        SELECT tipo, id, titular_id FROM (
+                              SELECT 'titular' AS tipo, t.id AS id, t.id AS titular_id, t.nome AS nome
+                                FROM titulares t
+                                JOIN vinculo_modalidades v ON v."titularId" = t.id
+                                JOIN modalidades m ON m.id = v."modalidadeId"
+                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
+                              UNION ALL
+                              SELECT 'dependente' AS tipo, d.id AS id, d."titularId" AS titular_id, d.nome AS nome
+                                FROM dependentes d
+                                JOIN vinculo_modalidades v ON v."dependenteId" = d.id
+                                JOIN modalidades m ON m.id = v."modalidadeId"
+                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
+                        ) pessoas
+                        ORDER BY nome ASC
+                        LIMIT ${limit} OFFSET ${skip}
+                  `;
+
+                  const [{ count }] = await this.repository.$queryRaw<{ count: bigint }[]>`
+                        SELECT count(*) AS count FROM (
+                              SELECT t.id FROM titulares t
+                                JOIN vinculo_modalidades v ON v."titularId" = t.id
+                                JOIN modalidades m ON m.id = v."modalidadeId"
+                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
+                              UNION ALL
+                              SELECT d.id FROM dependentes d
+                                JOIN vinculo_modalidades v ON v."dependenteId" = d.id
+                                JOIN modalidades m ON m.id = v."modalidadeId"
+                               WHERE lower(m.nome) = lower(${modalidadeFiltrada})
+                        ) pessoas
+                  `;
+
+                  totalPessoas = Number(count);
+                  idsTitularesDaPagina = [...new Set(pessoas.map(p => p.titular_id))];
+                  dependentesDaPagina = new Set(
+                        pessoas.filter(p => p.tipo === 'dependente').map(p => p.id),
+                  );
+                  titularesDaPagina = new Set(
+                        pessoas.filter(p => p.tipo === 'titular').map(p => p.id),
+                  );
+            }
+
             // conta total sem paginação
-            const total = await this.repository.titular.count({ where });
+            const total =
+                  totalPessoas ?? (await this.repository.titular.count({ where }));
 
             // busca paginada com dependentes
             const rawData = await this.repository.titular.findMany({
-                  where,
+                  ...(idsTitularesDaPagina
+                        ? { where: { id: { in: idsTitularesDaPagina } } }
+                        : { where }),
                   select: {
                         id: true,
                         nome: true,
@@ -368,8 +426,8 @@ export class PessoaRepository implements IPessoaRepository {
                         _count: { select: { Dependente: true } },
                   },
                   orderBy: { nome: 'asc' },
-                  skip,
-                  take: limit,
+                  // com filtro de modalidade a pagina ja foi definida por pessoa
+                  ...(idsTitularesDaPagina ? {} : { skip, take: limit }),
             });
 
             // Com filtro de modalidade, a lista deve mostrar so quem pratica.
@@ -377,15 +435,11 @@ export class PessoaRepository implements IPessoaRepository {
             // porque o dependente vem aninhado nele; aqui separamos quem de
             // fato corresponde: o titular e marcado, e os dependentes que nao
             // praticam saem da lista.
-            const modalidadeFiltrada = filters.modalidade?.trim().toLowerCase();
-            const pratica = (mods: { modalidade: { nome: string } }[]) =>
-                  mods.some(vm => vm.modalidade.nome.trim().toLowerCase() === modalidadeFiltrada);
-
             // mapeia para o formato HTTP
             const data = rawData.map(item => {
-                  const titularCorresponde = !modalidadeFiltrada || pratica(item.VinculoModalidade);
+                  const titularCorresponde = !modalidadeFiltrada || titularesDaPagina.has(item.id);
                   const dependentesVisiveis = modalidadeFiltrada
-                        ? item.Dependente.filter(dep => pratica(dep.VinculoModalidade))
+                        ? item.Dependente.filter(dep => dependentesDaPagina.has(dep.id))
                         : item.Dependente;
 
                   const pessoaHttp = TitularMapper.toHttp({
